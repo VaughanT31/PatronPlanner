@@ -1,0 +1,22 @@
+## Interface: 120100
+## Title: Patron Planner
+## Notes: Shows which patron crafting orders are worth doing: cost, reward, profit and the quality you can reach.
+## Author: CtrlShift_Zed
+## Version: 0.1.0
+## Category: CtrlShift_Zed
+## SavedVariables: PatronPlannerDB
+## OptionalDeps: Blizzard_Professions, Auctionator, TradeSkillMaster
+## IconTexture: Interface\AddOns\PatronPlanner\icon
+## X-License: MIT
+
+Locales\enUS.lua
+
+Core\Util.lua
+Core\Init.lua
+
+Pricing\Pricing.lua
+
+Data\Orders.lua
+
+UI\Card.lua
+UI\Board.lua
