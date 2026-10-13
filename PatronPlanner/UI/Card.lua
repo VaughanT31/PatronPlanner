@@ -96,9 +96,25 @@ function Card.Create(parent)
     card.Icon:SetSize(ICON, ICON)
     card.Icon:SetPoint("TOPLEFT", PAD, -10)
     card.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    card.IconBorder = card:CreateTexture(nil, "BORDER")
-    card.IconBorder:SetPoint("TOPLEFT", card.Icon, -1, 1)
-    card.IconBorder:SetPoint("BOTTOMRIGHT", card.Icon, 1, -1)
+    -- A frame drawn around the icon, not under it, so every item gets the
+    -- same 2px rarity edge whatever its art: 1px black, then the colour.
+    card.IconShadow = card:CreateTexture(nil, "BORDER")
+    card.IconShadow:SetPoint("TOPLEFT", card.Icon, -3, 3)
+    card.IconShadow:SetPoint("BOTTOMRIGHT", card.Icon, 3, -3)
+    card.IconShadow:SetColorTexture(0, 0, 0, 1)
+    card.IconEdges = {}
+    -- { point, icon point, x, y } pairs for the top, bottom, left and right edges.
+    for i, side in ipairs({
+        { "BOTTOMLEFT", "TOPLEFT", -2, 0, "TOPRIGHT", "TOPRIGHT", 2, 2 },
+        { "TOPLEFT", "BOTTOMLEFT", -2, 0, "BOTTOMRIGHT", "BOTTOMRIGHT", 2, -2 },
+        { "TOPRIGHT", "TOPLEFT", 0, 0, "BOTTOMLEFT", "BOTTOMLEFT", -2, 0 },
+        { "TOPLEFT", "TOPRIGHT", 0, 0, "BOTTOMRIGHT", "BOTTOMRIGHT", 2, 0 },
+    }) do
+        local edge = card:CreateTexture(nil, "OVERLAY")
+        edge:SetPoint(side[1], card.Icon, side[2], side[3], side[4])
+        edge:SetPoint(side[5], card.Icon, side[6], side[7], side[8])
+        card.IconEdges[i] = edge
+    end
 
     card.Profit = card:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     card.Profit:SetPoint("TOPRIGHT", -PAD, -11)
@@ -191,7 +207,13 @@ function Card:SetRecord(rec, isBest)
     self.Icon:SetTexture(rec.icon or 134400)
     self.Icon:SetDesaturated(not rec.learned)
     local r, g, b = Util.RarityColor(rec.rarity)
-    self.IconBorder:SetColorTexture(r, g, b, 0.9)
+    for _, edge in ipairs(self.IconEdges) do
+        if rec.learned and rec.rarity then
+            edge:SetColorTexture(r, g, b, 1)
+        else
+            edge:SetColorTexture(0.4, 0.4, 0.4, 1)
+        end
+    end
     self.Name:SetText(rec.name)
     if rec.learned then
         self.Name:SetTextColor(r, g, b)
