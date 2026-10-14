@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- **Materials you already own:** Patron Planner checks your bags, bank, reagent bank and warband bank. A material's count turns green when you have enough and amber when you have some, the card says how much is left to buy, and orders you can fill entirely from stock say "All in your bags".
+- **Nothing to buy filter:** the orders you can craft without buying anything, because the patron supplies it all or you already own it.
+- **Gold per concentration:** orders that need concentration show the profit per concentration point, and the new "Per concentration" sort puts the best use of your concentration first.
+- **Options page** (Esc > Options > AddOns, or `/pp options`): price source, count materials you own as free, show silver and copper, start in Blizzard's list, and when time left turns amber.
+- **Fixed:** a filter button could lose its left border at some UI scales.
+- **Updated for patch 12.1.5.**
+
 ## 0.1.0
 
 - Card view for the Patron tab of Crafting Orders: one card per order with the profit, quality needed and how to reach it, time left, what you supply and what you get.

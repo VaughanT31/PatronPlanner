@@ -20,6 +20,10 @@ local DEFAULTS = {
         filter = "all",
         sort = "best",
         showCopper = false,
+        -- Count materials you own as free instead of at market value.
+        ownedFree = false,
+        -- Time left turns amber under this many hours.
+        soonHours = 6,
         debug = false,
     },
 }
@@ -63,6 +67,8 @@ SlashCmdList.PATRONPLANNER = function(input)
         Say(settings.classic and L.SET_CLASSIC or L.SET_CARDS)
         local page = ns.Board and ns.Board.page
         if page and page:IsVisible() then ns.Board:Decide(page:GetBrowseType()) end
+    elseif command == "options" or command == "config" then
+        if ns.Options and ns.Options.Open then ns.Options.Open() end
     elseif command == "debug" then
         settings.debug = not settings.debug
         Say(L.SET_DEBUG:format(settings.debug and "on" or "off"))

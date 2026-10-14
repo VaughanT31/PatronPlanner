@@ -51,6 +51,11 @@ function Pricing.Source()
     return first
 end
 
+-- Every source Patron Planner knows, installed or not (for the options).
+function Pricing.Sources()
+    return SOURCES
+end
+
 function Pricing.Available()
     return Pricing.Source() ~= nil
 end

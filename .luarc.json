@@ -25,6 +25,7 @@
     "IsShiftKeyDown",
     "MenuUtil",
     "OrderBrowseType",
+    "PixelUtil",
     "PatronPlannerDB",
     "ProfessionsFrame",
     "SLASH_PATRONPLANNER1",

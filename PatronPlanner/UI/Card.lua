@@ -70,6 +70,14 @@ local function FillSlots(slots, entries, anchor, offsetX)
         if entry then
             slot.Icon:SetTexture(entry.icon or 134400)
             slot.Count:SetText((entry.count or 1) > 1 and entry.count or "")
+            -- Green when you own enough, amber when you own some.
+            if entry.owned and entry.owned >= (entry.count or 1) then
+                slot.Count:SetTextColor(0.35, 0.95, 0.45)
+            elseif entry.owned and entry.owned > 0 then
+                slot.Count:SetTextColor(1, 0.7, 0.2)
+            else
+                slot.Count:SetTextColor(1, 1, 1)
+            end
             slot.Pip:SetText(entry.quality and entry.quality > 0 and Util.QualityIcon(entry.quality, 12) or "")
             slot:ClearAllPoints()
             slot:SetPoint("LEFT", anchor, "LEFT", x, 0)
@@ -85,6 +93,7 @@ end
 function Card.Create(parent)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
     card:SetBackdrop(BACKDROP)
+    Util.CrispEdges(card)
     card:RegisterForClicks("LeftButtonUp")
 
     card.Strip = card:CreateTexture(nil, "ARTWORK")
@@ -242,6 +251,8 @@ function Card:SetRecord(rec, isBest)
     end
     if isBest then
         self.ProfitLabel:SetText(Util.Paint("gold", CreateAtlasMarkup("auctionhouse-icon-favorite", 11, 11) .. " " .. L.CARD_BEST))
+    elseif rec.perConc and rec.perConc > 0 then
+        self.ProfitLabel:SetText(Util.Paint("amber", L.CARD_PER_CONC:format(Util.Money(rec.perConc, full))))
     elseif not rec.profit then
         self.ProfitLabel:SetText(ns.Pricing.Available() and L.CARD_NO_PRICE or L.CARD_NO_SOURCE)
     else
@@ -254,9 +265,15 @@ function Card:SetRecord(rec, isBest)
     self.SupplyText:SetPoint("LEFT", self.SupplyRow, "LEFT", x + 2, 0)
     if #rec.supply == 0 then
         self.SupplyText:SetText(Util.Paint("green", L.CARD_ALL_PROVIDED))
+    elseif rec.fromStock then
+        self.SupplyText:SetText(Util.Paint("green", L.CARD_ALL_OWNED))
     elseif rec.cost then
         local more = #rec.supply > MAX_SUPPLY and ("+" .. (#rec.supply - MAX_SUPPLY) .. "  ") or ""
-        self.SupplyText:SetText(more .. Util.Money(rec.cost, full))
+        if rec.buyCost and rec.buyCost < rec.cost then
+            self.SupplyText:SetText(more .. L.CARD_TO_BUY:format(Util.Money(rec.buyCost, full)))
+        else
+            self.SupplyText:SetText(more .. Util.Money(rec.cost, full))
+        end
     else
         self.SupplyText:SetText("")
     end
@@ -343,14 +360,24 @@ function Card:ShowTooltip()
     for _, item in ipairs(rec.supply) do
         local name = TipIcon(item.icon) .. (item.name or "...") .. " x" .. item.count
             .. (item.quality and item.quality > 0 and (" " .. Util.QualityIcon(item.quality, 12)) or "")
+        if item.have and item.have > 0 then
+            name = name .. " " .. Util.Paint(item.have >= item.count and "green" or "amber", L.TIP_HAVE:format(item.have))
+        end
         GameTooltip:AddDoubleLine(name, item.price and Util.Money(item.price, full) or Util.Paint("grey", L.TIP_NO_PRICE),
             1, 1, 1, 1, 1, 1)
     end
 
+    if rec.buyCost and rec.cost and rec.buyCost < rec.cost then
+        GameTooltip:AddDoubleLine(L.TIP_TO_BUY, Util.Money(rec.buyCost, full), 1, 0.82, 0, 1, 1, 1)
+        GameTooltip:AddLine(ns.db.settings.ownedFree and L.TIP_OWNED_FREE or L.TIP_OWNED_VALUED, 0.6, 0.6, 0.6, true)
+    end
     GameTooltip:AddLine(" ")
     if rec.profit then
         local color = rec.profit < 0 and "red" or "green"
         GameTooltip:AddDoubleLine(L.CARD_PROFIT_TITLE, Util.Paint(color, Util.Money(rec.profit, full)), 1, 0.82, 0)
+        if rec.perConc then
+            GameTooltip:AddDoubleLine(L.TIP_PER_CONC, Util.Money(rec.perConc, full), 1, 0.82, 0, 1, 1, 1)
+        end
         if rec.partial then GameTooltip:AddLine(L.TIP_PARTIAL, 0.6, 0.6, 0.6, true) end
     elseif not ns.Pricing.Available() then
         GameTooltip:AddLine(L.TIP_NO_SOURCE, 0.6, 0.6, 0.6, true)

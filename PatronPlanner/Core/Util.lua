@@ -53,10 +53,11 @@ function Util.TimeLeft(seconds)
     return L.TIME_MINUTES:format(math.max(1, math.floor(seconds / 60)))
 end
 
--- Under 2 hours red, under 6 hours amber.
+-- Under 2 hours red, amber inside the "expiring soon" setting (6 hours).
 function Util.TimeColor(seconds)
     if not seconds or seconds < 7200 then return "red" end
-    if seconds < 21600 then return "amber" end
+    local soon = (ns.db and ns.db.settings.soonHours or 6) * 3600
+    if seconds < soon then return "amber" end
     return "grey"
 end
 
@@ -82,6 +83,20 @@ function Util.QualityIcon(quality, size)
     local atlas = qualityAtlas[quality]
     if not atlas then return L.QUALITY_SHORT:format(quality) end
     return CreateAtlasMarkup(atlas, size, size)
+end
+
+-- 1px backdrop edges can vanish when a frame lands between screen pixels
+-- (UI scale, or a width built from text). Unsnapped edges always draw.
+local EDGES = { "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner",
+    "TopEdge", "BottomEdge", "LeftEdge", "RightEdge" }
+function Util.CrispEdges(frame)
+    for _, key in ipairs(EDGES) do
+        local edge = frame[key]
+        if type(edge) == "table" and edge.SetSnapToPixelGrid then
+            edge:SetSnapToPixelGrid(false)
+            edge:SetTexelSnappingBias(0)
+        end
+    end
 end
 
 function Util.RarityColor(rarity)

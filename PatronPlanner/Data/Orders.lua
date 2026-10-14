@@ -8,12 +8,15 @@
 --     rewards       { { icon, count, name, value, bonus }, ... }
 --     rewardValue   gold + priced reward items
 --     bonus         true when a reward is soulbound or a currency
---     supply        { { itemID, icon, count, name, price }, ... } you provide
---     cost          what the supply costs, nil when nothing is priced
+--     supply        { { itemID, icon, count, name, price, have, owned }, ... } you provide
+--     cost          what the supply is worth, nil when nothing is priced
+--     buyCost       what the part you don't own costs
+--     fromStock     true when you own everything you'd supply
 --     need          requested quality (0 or 1 means any)
 --     reach         "any" | "cheap" | "conc" | "better" | "betterConc" | "none" | "unlearned"
 --     concCost      concentration the plan needs, when it needs any
 --     profit        nil when it can't be worked out
+--     perConc       profit per concentration point, when it needs some
 --     partial       true when some prices were missing
 --   }
 
@@ -28,6 +31,13 @@ local BIND_ON_PICKUP = 1
 local function ItemIDFromLink(link)
     if not link then return nil end
     return (C_Item.GetItemInfoInstant(link))
+end
+
+-- How many you have in bags, bank, reagent bank and warband bank. The
+-- bank counts are the game's cache from your last bank visit.
+local function Owned(itemID)
+    local ok, count = pcall(C_Item.GetItemCount, itemID, true, false, true, true)
+    return ok and count or 0
 end
 
 local function ItemName(itemID)
@@ -156,7 +166,8 @@ end
 local function Supply(rec, slots)
     local useHigh = rec.reach == "better" or rec.reach == "betterConc"
     rec.supply = {}
-    local cost, priced = 0, false
+    local cost, buyCost, priced = 0, 0, false
+    local allOwned = true
     for _, entry in ipairs(slots) do
         local slot = entry.slot
         local count = slot.quantityRequired or 1
@@ -176,7 +187,12 @@ local function Supply(rec, slots)
         end
         local itemID = option.reagent.itemID
         local price = Pricing.Price(itemID)
+        local have = Owned(itemID)
+        local owned = math.min(have, count)
+        if owned < count then allOwned = false end
         rec.supply[#rec.supply + 1] = {
+            have = have,
+            owned = owned,
             itemID = itemID,
             icon = C_Item.GetItemIconByID(itemID),
             count = count,
@@ -186,14 +202,16 @@ local function Supply(rec, slots)
         }
         if price then
             cost, priced = cost + price * count, true
+            buyCost = buyCost + price * (count - owned)
         elseif Pricing.Available() then
             rec.partial = true
         end
     end
+    rec.fromStock = #rec.supply > 0 and allOwned
     if #rec.supply == 0 then
-        rec.cost = 0
+        rec.cost, rec.buyCost = 0, 0
     elseif priced then
-        rec.cost = cost
+        rec.cost, rec.buyCost = cost, buyCost
     end
 end
 
@@ -219,14 +237,22 @@ function Orders.Evaluate(order, now)
     Rewards(rec, order)
     Supply(rec, slots)
 
+    -- Materials you own count at their market value (you could sell them
+    -- instead), unless the player chose to count them as free.
+    local ownedFree = ns.db and ns.db.settings.ownedFree
     if Pricing.Available() then
-        if rec.cost then rec.profit = rec.rewardValue - rec.cost end
+        local spend = ownedFree and rec.buyCost or rec.cost
+        if spend then rec.profit = rec.rewardValue - spend end
     elseif #rec.supply == 0 then
         -- No price addon, but nothing to buy: the gold is the profit.
         rec.profit = rec.gold
         rec.partial = #rec.rewards > 0 and not rec.bonus
     end
+    if rec.profit and rec.concCost and rec.concCost > 0 then
+        rec.perConc = rec.profit / rec.concCost
+    end
     rec.reachable = rec.reach ~= "none" and rec.reach ~= "unlearned"
+    rec.nothingToBuy = rec.reachable and (#rec.supply == 0 or rec.fromStock)
     return rec
 end
 

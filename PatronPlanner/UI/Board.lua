@@ -29,6 +29,7 @@ local FILTERS = {
     { key = "noconc", label = "FILTER_NOCONC", test = function(rec)
         return rec.reachable and rec.reach ~= "conc" and rec.reach ~= "betterConc"
     end },
+    { key = "stock", label = "FILTER_STOCK", test = function(rec) return rec.nothingToBuy end },
     { key = "bonus", label = "FILTER_BONUS", test = function(rec) return rec.bonus end },
     { key = "unlearned", label = "FILTER_UNLEARNED", test = function(rec) return not rec.learned end },
 }
@@ -45,6 +46,13 @@ local SORTS = {
         return ByProfit(a, b)
     end },
     { key = "profit", label = "SORT_PROFIT", compare = ByProfit },
+    { key = "conc", label = "SORT_CONC", compare = function(a, b)
+        -- Orders that need concentration first, best gold per point first.
+        local ca, cb = a.perConc or -math.huge, b.perConc or -math.huge
+        if (a.perConc ~= nil) ~= (b.perConc ~= nil) then return a.perConc ~= nil end
+        if ca ~= cb then return ca > cb end
+        return ByProfit(a, b)
+    end },
     { key = "reward", label = "SORT_REWARD", compare = function(a, b)
         if a.rewardValue ~= b.rewardValue then return a.rewardValue > b.rewardValue end
         return a.left < b.left
@@ -92,6 +100,7 @@ end
 local function Chip(parent, onClick)
     local chip = CreateFrame("Button", nil, parent, "BackdropTemplate")
     chip:SetBackdrop(CHIP_BACKDROP)
+    Util.CrispEdges(chip)
     chip:SetHeight(20)
     chip.Text = chip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     chip.Text:SetPoint("CENTER")
@@ -400,7 +409,7 @@ function Board:UpdateBar(records, filter, sort)
         chip.selected = chip.filter == filter
         PaintChip(chip)
         chip:ClearAllPoints()
-        chip:SetPoint("TOPLEFT", self.panel, "TOPLEFT", x, -30)
+        PixelUtil.SetPoint(chip, "TOPLEFT", self.panel, "TOPLEFT", x, -30)
         x = x + chip:GetWidth() + 6
     end
 end
