@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (not released yet)
+## 0.1.0
 
 - Card view for the Patron tab of Crafting Orders: one card per order with the profit, quality needed and how to reach it, time left, what you supply and what you get.
 - Summary bar: order count, how many you can craft, total profit on offer and your concentration.

@@ -4,7 +4,7 @@ A World of Warcraft addon (Midnight, retail) that shows which patron crafting or
 
 Prices come from whichever of these you have installed: Auction Coach, TradeSkillMaster or Auctionator. It works without them too, just without the gold columns.
 
-**Status:** in development, not released yet.
+Get it on [CurseForge](https://www.curseforge.com/wow/addons/patron-planner-better-view-of-patron-orders). Bugs and ideas: [Discord](https://discord.gg/wz7fw6jM9Z).
 
 ## License
 

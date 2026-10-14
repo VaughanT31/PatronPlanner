@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 121500
 ## Title: Patron Planner
 ## Notes: Shows which patron crafting orders are worth doing: cost, reward, profit and the quality you can reach.
 ## Author: CtrlShift_Zed
