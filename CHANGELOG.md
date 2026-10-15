@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Fixed:** the last filter button (Unlearned) lost its right border when the row was too wide for the window. The buttons now tighten up to fit.
+
 ## 0.2.0
 
 - **Materials you already own:** Patron Planner checks your bags, bank, reagent bank and warband bank. A material's count turns green when you have enough and amber when you have some, the card says how much is left to buy, and orders you can fill entirely from stock say "All in your bags".

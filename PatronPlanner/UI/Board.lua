@@ -104,9 +104,9 @@ local function Chip(parent, onClick)
     chip:SetHeight(20)
     chip.Text = chip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     chip.Text:SetPoint("CENTER")
-    chip.SetLabel = function(self, text)
+    chip.SetLabel = function(self, text, padding)
         self.Text:SetText(text)
-        self:SetWidth(math.ceil(self.Text:GetStringWidth()) + 20)
+        self:SetWidth(math.ceil(self.Text:GetStringWidth()) + (padding or 20))
     end
     chip:SetScript("OnEnter", function(self) self.hover = true; PaintChip(self) end)
     chip:SetScript("OnLeave", function(self) self.hover = false; PaintChip(self) end)
@@ -399,18 +399,31 @@ function Board:UpdateBar(records, filter, sort)
 
     self.sortButton:SetLabel(L.SORT_LABEL:format(L[sort.label]))
 
-    local x = 8
-    for _, chip in ipairs(self.chips) do
+    -- The chips are laid out roomy, then tighter when the row would run past the panel's right
+    -- edge: Blizzard's list clips what sticks out, which cut the last chip's right border off.
+    local labels, textWidth = {}, 0
+    for i, chip in ipairs(self.chips) do
         local count = 0
         for _, rec in ipairs(records) do
             if chip.filter.test(rec) then count = count + 1 end
         end
-        chip:SetLabel(L[chip.filter.label] .. "  " .. Util.Paint("grey", count))
+        labels[i] = L[chip.filter.label] .. "  " .. Util.Paint("grey", count)
+        chip:SetLabel(labels[i], 0)
+        textWidth = textWidth + chip:GetWidth()
+    end
+    local room = (self.panel:GetWidth() or 0) - 16 - 2
+    local padding, gap = 20, 6
+    if room > 0 and textWidth + #self.chips * padding + (#self.chips - 1) * gap > room then
+        padding, gap = 12, 4
+    end
+    local x = 8
+    for i, chip in ipairs(self.chips) do
+        chip:SetLabel(labels[i], padding)
         chip.selected = chip.filter == filter
         PaintChip(chip)
         chip:ClearAllPoints()
         PixelUtil.SetPoint(chip, "TOPLEFT", self.panel, "TOPLEFT", x, -30)
-        x = x + chip:GetWidth() + 6
+        x = x + chip:GetWidth() + gap
     end
 end
 
