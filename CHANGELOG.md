@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.1
 
 - **Fixed:** the last filter button (Unlearned) lost its right border when the row was too wide for the window. The buttons now tighten up to fit.
 
