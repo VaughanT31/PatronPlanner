@@ -266,7 +266,7 @@ function Board:Decide(browseType)
         and not Setting("classic")
     if wanted then
         self:Activate()
-        self:Refresh()
+        self:Refresh(true)
     else
         self:Deactivate()
     end
@@ -282,20 +282,51 @@ end
 
 -- Drawing ---------------------------------------------------------------
 
-function Board:Refresh()
+-- The game empties its order list while it fetches a new one: after an
+-- order is crafted, for example, and crafting (CraftSim most of all) fires
+-- bursts of item and currency events in that gap. So only Blizzard's own
+-- results (ShowGeneric, fresh = true) may empty the board; any other
+-- refresh that reads an empty list keeps the cards it had and looks again
+-- a moment later, and refreshes wait while a request is in flight.
+local RECHECK_DELAY, RECHECKS = 1, 5
+
+function Board:Refresh(fresh)
     if not self.active then return end
+    if fresh then self.waiting = false end
+    local records = Orders.All()
+    if not fresh and #records == 0 and self.records and #self.records > 0 then
+        self:Recheck()
+        self:Layout()
+        return
+    end
+    self.rechecks = 0
     self.panel:SetAlpha(1)
-    self.records = Orders.All()
+    self.records = records
     self:Layout()
 end
 
--- Throttled refresh for bursts of item data and currency events.
+function Board:Recheck()
+    if self.recheckPending or (self.rechecks or 0) >= RECHECKS then return end
+    self.recheckPending = true
+    self.rechecks = (self.rechecks or 0) + 1
+    C_Timer.After(RECHECK_DELAY, function()
+        Board.recheckPending = false
+        if not Board.waiting then Board:Refresh() end
+    end)
+end
+
+-- Throttled refresh for bursts of item data and currency events. While
+-- an order request is in flight it only redraws what it has.
 function Board:Soon()
     if not self.active or self.pending then return end
     self.pending = true
     C_Timer.After(0.3, function()
         Board.pending = false
-        Board:Refresh()
+        if Board.waiting then
+            if Board.active then Board:Layout() end
+        else
+            Board:Refresh()
+        end
     end)
 end
 
@@ -491,8 +522,13 @@ function Board:Install()
         Board:UpdateToggle()
     end)
     hooksecurefunc(page, "SendOrderRequest", function()
+        Board.waiting = true
         if Board.active then Board.panel:SetAlpha(0.45) end
     end)
+    -- Back on the list after viewing (or crafting) an order: read it again.
+    if page.BrowseFrame.HookScript then
+        page.BrowseFrame:HookScript("OnShow", function() Board:Soon() end)
+    end
     self:UpdateToggle()
 end
 

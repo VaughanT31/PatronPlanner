@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- **Fixed:** after crafting an order (most often with another crafting addon open), the cards could all disappear until you searched again. The game empties its order list for a moment while it fetches a new one, and Patron Planner was redrawing from that empty list. Now the cards stay until the new list arrives, and the board reads the list again when you come back from an order.
+
 ## 0.2.1
 
 - **Fixed:** the last filter button (Unlearned) lost its right border when the row was too wide for the window. The buttons now tighten up to fit.
