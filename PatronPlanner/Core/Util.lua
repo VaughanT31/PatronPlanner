@@ -99,10 +99,40 @@ function Util.CrispEdges(frame)
     end
 end
 
+-- A border of four lines, each exactly one screen pixel wide whatever the
+-- UI scale. (A 1-unit backdrop edge can be under a pixel at some scales and
+-- vanish on one side.) Colour it with frame:SetPixelBorderColor(r, g, b, a).
+function Util.PixelBorder(frame)
+    local edges = {}
+    local function Edge(a1, a2, horizontal)
+        local tex = frame:CreateTexture(nil, "BORDER")
+        tex:SetColorTexture(1, 1, 1, 1)
+        tex:SetPoint(a1)
+        tex:SetPoint(a2)
+        if horizontal then
+            PixelUtil.SetHeight(tex, 1, 1)
+        else
+            PixelUtil.SetWidth(tex, 1, 1)
+        end
+        edges[#edges + 1] = tex
+    end
+    Edge("TOPLEFT", "TOPRIGHT", true)
+    Edge("BOTTOMLEFT", "BOTTOMRIGHT", true)
+    Edge("TOPLEFT", "BOTTOMLEFT", false)
+    Edge("TOPRIGHT", "BOTTOMRIGHT", false)
+    frame.SetPixelBorderColor = function(_, r, g, b, a)
+        for _, tex in ipairs(edges) do tex:SetVertexColor(r, g, b, a or 1) end
+    end
+end
+
 function Util.RarityColor(rarity)
     local c = rarity and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[rarity]
     if c then return c.r, c.g, c.b end
     return 1, 1, 1
+end
+
+function Util.Say(text)
+    print("|cff7fbfffPatron Planner|r " .. tostring(text))
 end
 
 function Util.Debug(...)

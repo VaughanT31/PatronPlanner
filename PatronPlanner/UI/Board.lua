@@ -1,12 +1,14 @@
--- Patron Planner - the card view over Blizzard's Patron order list.
+-- Patron Planner - the card view over Blizzard's crafting order lists
+-- (Patron, Personal, Guild, and Public once an item's orders are listed).
 --
 -- Blizzard's list is never removed: while the cards show, its rows,
 -- headers and scroll bar are made invisible and our panel sits on top and
 -- takes the mouse. The Cards / Classic button by the order tabs swaps back.
+-- Public orders first come grouped by item: that view stays Blizzard's.
 --
 -- Hooks on ProfessionsFrame.OrdersPage (Blizzard_Professions):
 --   ShowGeneric            new orders arrived: draw the cards
---   SetCraftingOrderType   tab changed: hide the cards off the Patron tab
+--   SetCraftingOrderType   tab changed: the new tab decides on its next list
 --   SendOrderRequest       a search started: dim the cards until it lands
 
 local _, ns = ...
@@ -74,25 +76,37 @@ local function Find(list, key)
     return list[1]
 end
 
--- Small rounded-looking buttons for the chips and the sort button.
+-- Small rounded-looking buttons for the chips and the sort button. The
+-- border is drawn one screen pixel wide (Util.PixelBorder), so no side
+-- goes missing at odd UI scales.
 local CHIP_BACKDROP = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
 }
 
 local function PaintChip(chip)
-    if chip.selected then
+    if chip.accent then
+        -- Values and Queue Orders: buttons to click, not filters, so they
+        -- stand out in gold.
+        if chip.hover or chip.selected then
+            chip:SetBackdropColor(0.55, 0.40, 0.06, 1)
+            chip:SetPixelBorderColor(1, 0.9, 0.4, 1)
+            chip.Text:SetTextColor(1, 1, 1)
+        else
+            chip:SetBackdropColor(0.40, 0.29, 0.04, 0.95)
+            chip:SetPixelBorderColor(1, 0.82, 0, 1)
+            chip.Text:SetTextColor(1, 0.95, 0.75)
+        end
+    elseif chip.selected then
         chip:SetBackdropColor(0.32, 0.24, 0.05, 0.95)
-        chip:SetBackdropBorderColor(1, 0.82, 0, 0.9)
+        chip:SetPixelBorderColor(1, 0.82, 0, 0.9)
         chip.Text:SetTextColor(1, 0.9, 0.5)
     elseif chip.hover then
         chip:SetBackdropColor(0.16, 0.15, 0.13, 0.95)
-        chip:SetBackdropBorderColor(0.6, 0.52, 0.3, 0.9)
+        chip:SetPixelBorderColor(0.6, 0.52, 0.3, 0.9)
         chip.Text:SetTextColor(1, 1, 1)
     else
         chip:SetBackdropColor(0.08, 0.08, 0.09, 0.9)
-        chip:SetBackdropBorderColor(0.3, 0.28, 0.24, 0.9)
+        chip:SetPixelBorderColor(0.3, 0.28, 0.24, 0.9)
         chip.Text:SetTextColor(0.85, 0.85, 0.85)
     end
 end
@@ -100,7 +114,7 @@ end
 local function Chip(parent, onClick)
     local chip = CreateFrame("Button", nil, parent, "BackdropTemplate")
     chip:SetBackdrop(CHIP_BACKDROP)
-    Util.CrispEdges(chip)
+    Util.PixelBorder(chip)
     chip:SetHeight(20)
     chip.Text = chip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     chip.Text:SetPoint("CENTER")
@@ -137,14 +151,41 @@ function Board:Build(list)
     line:SetHeight(1)
     line:SetColorTexture(1, 0.82, 0, 0.25)
 
+    self.sortButton = Chip(panel, function(button) Board:SortMenu(button) end)
+    -- Whole screen pixels, or the top edge can land between pixels.
+    PixelUtil.SetPoint(self.sortButton, "TOPRIGHT", panel, "TOPRIGHT", -8, -6)
+
+    -- Shows or hides the queue panel (UI/QueuePanel.lua).
+    self.queueButton = Chip(panel, function() if ns.QueuePanel then ns.QueuePanel:Toggle() end end)
+    self.queueButton.accent = true
+    PixelUtil.SetPoint(self.queueButton, "RIGHT", self.sortButton, "LEFT", -6, 0)
+    self.queueButton:HookScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine(L.QUEUE_CHIP_TITLE, 1, 0.82, 0)
+        GameTooltip:AddLine(L.QUEUE_CHIP_TIP, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    self.queueButton:HookScript("OnLeave", GameTooltip_Hide)
+
+    -- What concentration and Moxie are worth to you (UI/Values.lua).
+    self.valuesButton = Chip(panel, function(button) ns.Values:Toggle(button) end)
+    self.valuesButton.accent = true
+    PixelUtil.SetPoint(self.valuesButton, "RIGHT", self.queueButton, "LEFT", -6, 0)
+    self.valuesButton:SetLabel(L.VALUES_BUTTON)
+    PaintChip(self.valuesButton)
+    self.valuesButton:HookScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine(L.VALUES_TITLE, 1, 0.82, 0)
+        GameTooltip:AddLine(L.VALUES_BUTTON_TIP, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    self.valuesButton:HookScript("OnLeave", GameTooltip_Hide)
+
     self.summary = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     self.summary:SetPoint("TOPLEFT", 10, -9)
-    self.summary:SetPoint("RIGHT", panel, "RIGHT", -130, 0)
+    self.summary:SetPoint("RIGHT", self.valuesButton, "LEFT", -10, 0)
     self.summary:SetJustifyH("LEFT")
     self.summary:SetWordWrap(false)
-
-    self.sortButton = Chip(panel, function(button) Board:SortMenu(button) end)
-    self.sortButton:SetPoint("TOPRIGHT", -8, -6)
 
     for _, filter in ipairs(FILTERS) do
         local chip = Chip(panel, function()
@@ -232,7 +273,7 @@ end
 function Board:UpdateToggle()
     local page = self.page
     if not (page and self.toggle) then return end
-    self.toggle:SetShown(page.orderType == Enum.CraftingOrderType.Npc)
+    self.toggle:SetShown(page.orderType ~= nil)
     self.toggle:SetText(Setting("classic") and L.TOGGLE_CARDS or L.TOGGLE_CLASSIC)
 end
 
@@ -253,15 +294,17 @@ function Board:Deactivate()
     if not self.active then return end
     self.active = false
     for _, part in ipairs(BlizzardParts(self.list)) do part:SetAlpha(1) end
+    if ns.Values then ns.Values:Hide() end
     self.panel:Hide()
     GameTooltip:Hide()
 end
 
--- Cards only for a flat list on the Patron tab, unless Classic is chosen.
+-- Cards for a flat list on any order tab, unless Classic is chosen.
+-- (Public orders grouped by item keep Blizzard's view.)
 function Board:Decide(browseType)
     local page = self.page
     local flat = OrderBrowseType and OrderBrowseType.Flat
-    local wanted = page.orderType == Enum.CraftingOrderType.Npc
+    local wanted = page.orderType ~= nil
         and (flat == nil or browseType == flat)
         and not Setting("classic")
     if wanted then
@@ -302,6 +345,7 @@ function Board:Refresh(fresh)
     self.rechecks = 0
     self.panel:SetAlpha(1)
     self.records = records
+    if ns.Queue then ns.Queue.Update(records, self.page and self.page.orderType, fresh) end
     self:Layout()
 end
 
@@ -349,6 +393,8 @@ function Board:Layout()
         if a.learned ~= b.learned then return a.learned end
         return sort.compare(a, b)
     end)
+    -- What the queue panel's Queue all goes through.
+    self.shown = shown
 
     local best
     for _, rec in ipairs(records) do
@@ -423,12 +469,20 @@ function Board:UpdateBar(records, filter, sort)
     if have then
         parts[#parts + 1] = L.SUMMARY_CONC:format(have, most or have)
     end
+    if self.page and self.page.orderType == Enum.CraftingOrderType.Public and records[1] then
+        local claims = Orders.ClaimsLeft(records[1].profession)
+        if claims then parts[#parts + 1] = Util.Paint(claims > 0 and "white" or "red", L.SUMMARY_CLAIMS:format(claims)) end
+    end
     if not ns.Pricing.Available() then
         parts[#parts + 1] = Util.Paint("grey", L.SUMMARY_NO_PRICES)
     end
     self.summary:SetText(table.concat(parts, Util.Paint("grey", "   |   ")))
 
     self.sortButton:SetLabel(L.SORT_LABEL:format(L[sort.label]))
+    local queued = ns.Queue and ns.Queue.Count() or 0
+    self.queueButton:SetLabel(queued > 0 and L.QUEUE_CHIP_COUNT:format(queued) or L.QUEUE_CHIP)
+    self.queueButton.selected = ns.QueuePanel and ns.QueuePanel.frame and ns.QueuePanel.frame:IsShown() or false
+    PaintChip(self.queueButton)
 
     -- The chips are laid out roomy, then tighter when the row would run past the panel's right
     -- edge: Blizzard's list clips what sticks out, which cut the last chip's right border off.
@@ -442,7 +496,8 @@ function Board:UpdateBar(records, filter, sort)
         chip:SetLabel(labels[i], 0)
         textWidth = textWidth + chip:GetWidth()
     end
-    local room = (self.panel:GetWidth() or 0) - 16 - 2
+    -- Keep clear of the list's right edge, which clips what sticks out.
+    local room = (self.panel:GetWidth() or 0) - 16 - 8
     local padding, gap = 20, 6
     if room > 0 and textWidth + #self.chips * padding + (#self.chips - 1) * gap > room then
         padding, gap = 12, 4
@@ -518,7 +573,8 @@ function Board:Install()
         end)
     end)
     hooksecurefunc(page, "SetCraftingOrderType", function()
-        if page.orderType ~= Enum.CraftingOrderType.Npc then Board:Deactivate() end
+        -- A new tab: its list arrives through ShowGeneric, which decides
+        -- whether the cards show.
         Board:UpdateToggle()
     end)
     hooksecurefunc(page, "SendOrderRequest", function()
@@ -530,6 +586,7 @@ function Board:Install()
         page.BrowseFrame:HookScript("OnShow", function() Board:Soon() end)
     end
     self:UpdateToggle()
+    if ns.QueuePanel then ns.QueuePanel:Refresh() end
 end
 
 local events = CreateFrame("Frame")

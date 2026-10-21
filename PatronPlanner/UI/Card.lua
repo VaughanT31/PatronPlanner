@@ -28,6 +28,7 @@ local REACH_TEXT = {
     better = { "amber", "REACH_BETTER" },
     betterConc = { "amber", "REACH_BETTER_CONC" },
     none = { "red", "REACH_NONE" },
+    unknown = { "grey", "REACH_UNKNOWN" },
     unlearned = { "grey", "REACH_UNLEARNED" },
 }
 
@@ -40,6 +41,7 @@ local BACKDROP = {
 local function Verdict(rec)
     if not rec.learned then return "grey" end
     if rec.reach == "none" then return "red" end
+    if rec.reach == "unknown" then return "grey" end
     if rec.profit and rec.profit < 0 then return "red" end
     if rec.reach == "conc" or rec.reach == "better" or rec.reach == "betterConc" then return "amber" end
     if not rec.profit then return "grey" end
@@ -94,7 +96,7 @@ function Card.Create(parent)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
     card:SetBackdrop(BACKDROP)
     Util.CrispEdges(card)
-    card:RegisterForClicks("LeftButtonUp")
+    card:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     card.Strip = card:CreateTexture(nil, "ARTWORK")
     card.Strip:SetPoint("TOPLEFT", 1, -1)
@@ -162,6 +164,28 @@ function Card.Create(parent)
     card.RewardSlots = {}
     for i = 1, MAX_REWARDS do card.RewardSlots[i] = IconSlot(card.RewardRow) end
 
+    -- Queue button, bottom right: + to add, a tick when queued.
+    card.QueueButton = CreateFrame("Button", nil, card)
+    card.QueueButton:SetSize(18, 18)
+    card.QueueButton:SetPoint("BOTTOMRIGHT", -5, 5)
+    card.QueueButton.Icon = card.QueueButton:CreateTexture(nil, "ARTWORK")
+    card.QueueButton.Icon:SetAllPoints()
+    card.QueueButton:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    card.QueueButton:SetScript("OnClick", function(button)
+        local rec = button:GetParent().rec
+        if rec and ns.Queue then ns.Queue.Toggle(rec) end
+    end)
+    card.QueueButton:SetScript("OnEnter", function(button)
+        local rec = button:GetParent().rec
+        GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+        local queued = rec and ns.Queue and ns.Queue.Has(rec.key)
+        GameTooltip:AddLine(queued and L.CARD_UNQUEUE or L.CARD_QUEUE, 1, 0.82, 0)
+        local why = rec and not queued and ns.Queue and ns.Queue.Refusal(rec)
+        if why then GameTooltip:AddLine(why, 1, 0.4, 0.4, true) end
+        GameTooltip:Show()
+    end)
+    card.QueueButton:SetScript("OnLeave", GameTooltip_Hide)
+
     card:SetScript("OnSizeChanged", function(self, width)
         self.RewardLabel:ClearAllPoints()
         self.RewardLabel:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", math.floor(width / 2) + 4, 36)
@@ -184,8 +208,13 @@ function Card.Create(parent)
     card:SetScript("OnEvent", function(self)
         if self.hover then self:ShowTooltip() end
     end)
-    card:SetScript("OnClick", function(self)
-        if self.rec then ns.Board:Open(self.rec) end
+    card:SetScript("OnClick", function(self, mouse)
+        if not self.rec then return end
+        if mouse == "RightButton" then
+            if ns.Queue then ns.Queue.Toggle(self.rec) end
+        else
+            ns.Board:Open(self.rec)
+        end
     end)
 
     for key, fn in pairs(Card) do
@@ -202,13 +231,21 @@ function Card:Paint()
         self:SetBackdropBorderColor(c[1], c[2], c[3], 0.9)
     else
         self:SetBackdropColor(0.07, 0.07, 0.08, 0.92)
-        self:SetBackdropBorderColor(0.28, 0.26, 0.22, 0.9)
+        if self.queued then
+            self:SetBackdropBorderColor(1, 0.82, 0, 0.75)
+        else
+            self:SetBackdropBorderColor(0.28, 0.26, 0.22, 0.9)
+        end
     end
 end
 
 function Card:SetRecord(rec, isBest)
     self.rec = rec
     self.verdict = Verdict(rec)
+    self.queued = ns.Queue and ns.Queue.Has(rec.key) or false
+    self.QueueButton:SetShown(rec.learned and rec.reach ~= "none")
+    self.QueueButton.Icon:SetTexture(self.queued and "Interface\\RaidFrame\\ReadyCheck-Ready"
+        or "Interface\\PaperDollInfoFrame\\Character-Plus")
     local c = Util.COLOR[self.verdict]
     self.Strip:SetColorTexture(c[1], c[2], c[3], 0.95)
     self:Paint()
@@ -237,8 +274,11 @@ function Card:SetRecord(rec, isBest)
     if rec.concCost and rec.concCost > 0 then
         reachText = reachText .. " " .. L.CONC_SHORT:format(rec.concCost)
     end
+    local customer = (not rec.isPatron and rec.customer)
+        and ("   " .. Util.Paint("grey", L.CARD_FOR:format(Ambiguate(rec.customer, "short")))) or ""
+    local queuedTag = self.queued and ("   " .. Util.Paint("gold", L.CARD_QUEUED)) or ""
     self.Status:SetText(quality .. Util.Paint(reach[1], reachText) .. "   "
-        .. Util.Paint(Util.TimeColor(rec.left), L.TIME_LEFT:format(Util.TimeLeft(rec.left))))
+        .. Util.Paint(Util.TimeColor(rec.left), L.TIME_LEFT:format(Util.TimeLeft(rec.left))) .. customer .. queuedTag)
 
     -- Profit, the headline.
     local full = ns.db and ns.db.settings.showCopper
@@ -311,6 +351,16 @@ function Card:ShowTooltip()
     local full = true
     local r, g, b = Util.RarityColor(rec.rarity)
     GameTooltip:AddLine(rec.name, r, g, b)
+    if rec.customer and not rec.isPatron then
+        GameTooltip:AddDoubleLine(L.TIP_CUSTOMER, Ambiguate(rec.customer, "short"), 1, 0.82, 0, 1, 1, 1)
+        if rec.note then GameTooltip:AddLine('"' .. rec.note .. '"', 0.8, 0.8, 0.8, true) end
+        -- Trust Crafter's summary of this customer, when it offers one.
+        local api = TrustCrafterAPI
+        if api and type(api.GetCustomerSummary) == "function" then
+            local ok, line = pcall(api.GetCustomerSummary, rec.customer)
+            if ok and type(line) == "string" and line ~= "" then GameTooltip:AddLine(line, 0.6, 0.85, 1, true) end
+        end
+    end
 
     if not rec.learned then
         GameTooltip:AddLine(L.TIP_UNLEARNED, 1, 0.4, 0.4)
@@ -331,6 +381,10 @@ function Card:ShowTooltip()
             GameTooltip:AddDoubleLine(L.TIP_CONCENTRATION,
                 have and L.TIP_CONC_OF:format(rec.concCost, have) or tostring(rec.concCost),
                 1, 0.82, 0, 1, 1, 1)
+            if rec.concAvg and rec.concAvg < rec.concCost then
+                GameTooltip:AddLine(L.TIP_INGENUITY:format(math.floor(rec.ingenuity * 100 + 0.5), math.floor(rec.concAvg + 0.5)),
+                    0.6, 0.6, 0.6, true)
+            end
         end
     end
 
@@ -339,9 +393,12 @@ function Card:ShowTooltip()
     if rec.gold > 0 then
         GameTooltip:AddDoubleLine(L.TIP_GOLD, Util.Money(rec.gold, full), 1, 1, 1, 1, 1, 1)
     end
+    local unvalued = false
     for _, reward in ipairs(rec.rewards) do
         local name = TipIcon(reward.icon) .. (reward.name or "...") .. (reward.count > 1 and (" x" .. reward.count) or "")
+        if reward.firstCraft then name = name .. " " .. Util.Paint("grey", L.TIP_FIRST_CRAFT:format(reward.firstCraft)) end
         local value
+        if (reward.currencyID or reward.valuable) and not reward.value then unvalued = true end
         if reward.value then
             value = Util.Money(reward.value, full)
         elseif reward.bonus then
@@ -351,6 +408,7 @@ function Card:ShowTooltip()
         end
         GameTooltip:AddDoubleLine(name, value, 1, 1, 1, 1, 1, 1)
     end
+    if unvalued then GameTooltip:AddLine(L.TIP_SET_VALUE, 0.6, 0.6, 0.6, true) end
 
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L.CARD_SUPPLY, 1, 0.82, 0)
@@ -371,6 +429,11 @@ function Card:ShowTooltip()
         GameTooltip:AddDoubleLine(L.TIP_TO_BUY, Util.Money(rec.buyCost, full), 1, 0.82, 0, 1, 1, 1)
         GameTooltip:AddLine(ns.db.settings.ownedFree and L.TIP_OWNED_FREE or L.TIP_OWNED_VALUED, 0.6, 0.6, 0.6, true)
     end
+    if rec.concWorth then
+        local points = rec.concAvg or rec.concCost
+        GameTooltip:AddDoubleLine(L.TIP_CONC_WORTH:format(math.floor(points + 0.5), Util.Money(rec.concWorth / points, full)),
+            Util.Money(-rec.concWorth, full), 1, 0.82, 0, 1, 0.45, 0.45)
+    end
     GameTooltip:AddLine(" ")
     if rec.profit then
         local color = rec.profit < 0 and "red" or "green"
@@ -388,5 +451,6 @@ function Card:ShowTooltip()
 
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L.TIP_CLICK, 0.5, 0.5, 0.5)
+    GameTooltip:AddLine(L.TIP_RIGHT_CLICK, 0.5, 0.5, 0.5)
     GameTooltip:Show()
 end

@@ -12,6 +12,7 @@ if not (Settings and Settings.RegisterVerticalLayoutCategory) then return end
 local category = Settings.RegisterVerticalLayoutCategory(L.ADDON_TITLE)
 
 local function Changed()
+    if ns.MinimapButton then ns.MinimapButton.Refresh() end
     local board = ns.Board
     local page = board and board.page
     if page and page:IsVisible() then board:Decide(page:GetBrowseType()) end
@@ -75,6 +76,7 @@ Checkbox("showCopper", L.OPT_COPPER, L.OPT_COPPER_TIP, false)
 Header(L.OPT_VIEW)
 Checkbox("classic", L.OPT_CLASSIC, L.OPT_CLASSIC_TIP, false)
 Slider("soonHours", L.OPT_SOON, L.OPT_SOON_TIP, 6, 2, 24, 1, function(hours) return L.OPT_HOURS:format(hours) end)
+Checkbox("minimapHidden", L.OPT_MINIMAP_HIDDEN, L.OPT_MINIMAP_HIDDEN_TIP, false)
 
 Settings.RegisterAddOnCategory(category)
 Options.category = category

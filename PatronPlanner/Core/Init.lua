@@ -3,6 +3,7 @@
 --   PatronPlannerDB = {
 --     version  = DB_VERSION,
 --     settings = { ... },        see DEFAULTS
+--     queues   = { ["Name-Realm"] = { ... } },   Data/Queue.lua
 --   }
 
 local ADDON_NAME, ns = ...
@@ -24,8 +25,24 @@ local DEFAULTS = {
         ownedFree = false,
         -- Time left turns amber under this many hours.
         soonHours = 6,
+        -- Values panel: gold per concentration point (0 = not counted), and
+        -- gold per point of a currency reward such as Moxie, by currency ID.
+        concValue = 0,
+        currencyValues = {},
+        -- Gold per unpriced reward item (knowledge, payout bags), by item ID.
+        itemValues = {},
+        -- Minimap button.
+        minimapHidden = false,
+        minimapAngle = 200,
+        -- Queue panel closed with its X (it shows with Crafting Orders).
+        queueHidden = false,
+        -- Queue all options.
+        queueSkipConc = false,
+        queueSkipBuy = false,
+        queueConcLimit = true,
         debug = false,
     },
+    queues = {},
 }
 
 local function ApplyDefaults(target, defaults)
@@ -51,6 +68,7 @@ frame:SetScript("OnEvent", function(_, _, name)
     PatronPlannerDB = PatronPlannerDB or {}
     ApplyDefaults(PatronPlannerDB, DEFAULTS)
     ns.db = PatronPlannerDB
+    if ns.MinimapButton then ns.MinimapButton.Refresh() end
 end)
 
 local function Say(text)
@@ -69,6 +87,12 @@ SlashCmdList.PATRONPLANNER = function(input)
         if page and page:IsVisible() then ns.Board:Decide(page:GetBrowseType()) end
     elseif command == "options" or command == "config" then
         if ns.Options and ns.Options.Open then ns.Options.Open() end
+    elseif command == "queue" then
+        if ns.QueuePanel then ns.QueuePanel:Toggle() end
+    elseif command == "shop" or command == "shopping" then
+        if ns.ShoppingList then ns.ShoppingList:Toggle() end
+    elseif command == "minimap" then
+        if ns.MinimapButton then ns.MinimapButton.Toggle() end
     elseif command == "debug" then
         settings.debug = not settings.debug
         Say(L.SET_DEBUG:format(settings.debug and "on" or "off"))

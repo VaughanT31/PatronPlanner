@@ -2,7 +2,7 @@
 -- source is optional: with none, the cards still show quality, time and
 -- the gold reward, just no cost or profit.
 --
--- Auction Coach joins this list later (AuctionCoachAPI.GetMarketValue).
+-- Auction Coach (ours) comes first when it's installed.
 
 local _, ns = ...
 
@@ -12,6 +12,17 @@ ns.Pricing = Pricing
 local CALLER = "PatronPlanner"
 
 local SOURCES = {
+    {
+        key = "auctioncoach",
+        name = "Auction Coach",
+        available = function()
+            return AuctionCoachAPI and AuctionCoachAPI.GetMarketValue
+                and (not AuctionCoachAPI.IsReady or AuctionCoachAPI.IsReady())
+        end,
+        price = function(itemID)
+            return AuctionCoachAPI.GetMarketValue(itemID)
+        end,
+    },
     {
         key = "tsm",
         name = "TradeSkillMaster",

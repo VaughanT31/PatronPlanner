@@ -1,15 +1,20 @@
-<p><strong>See which patron orders are worth doing, at a glance.</strong> Blizzard's Patron tab is a plain list: to know whether an order is worth it you open each one, check the materials, look up prices and guess. Patron Planner turns the list into cards that answer that straight away.</p>
+<p><strong>See which crafting orders are worth doing, at a glance, and work through them from one queue.</strong> Blizzard's Patron tab is a plain list: to know whether an order is worth it you open each one, check the materials, look up prices and guess. Patron Planner turns the list into cards that answer that straight away.</p>
 <ul>
 <li><strong>Profit up front:</strong> the reward, what you'd spend on materials and the profit on every order.</li>
 <li><strong>Quality reach:</strong> whether the cheapest materials reach the quality the patron wants, or whether it needs concentration, better materials or can't be done yet.</li>
 <li><strong>Best pick:</strong> the most profitable order you can actually craft is marked for you.</li>
 <li><strong>Filters and sorting:</strong> one click for the orders you can craft, the profitable ones, the ones that don't need concentration, the ones you can do without buying anything, or the ones with knowledge and other bonus rewards.</li>
 <li><strong>What you already own:</strong> materials in your bags, banks and warband bank are counted, so you see what's left to buy and which orders need nothing bought at all.</li>
-<li><strong>Gold per concentration:</strong> spend your concentration on the orders that pay best for it.</li>
+<li><strong>Gold per concentration:</strong> spend your concentration on the orders that pay best for it, and set what a point is worth to you so it comes off the profit.</li>
+<li><strong>Moxie counted:</strong> give Moxie a gold value and it's added to the reward. Reward items are valued after the AH cut.</li>
+<li><strong>Every order tab:</strong> Patron, Personal, Guild and Public, with the customer and their note on personal orders and your public claims left.</li>
+<li><strong>Order queue:</strong> queue the orders you want, then Claim, Craft and Hand in from a panel beside the profession window. Next does the next step, so a whole queue goes by one button, crafted with the planned materials.</li>
+<li><strong>Shopping list:</strong> what the queue still needs, counted once, with prices. Send it to Auction Coach or Auctionator in one click.</li>
+<li><strong>Minimap button</strong> for the options, the shopping list and the queue.</li>
 <li><strong>Unlearned recipes</strong> sit at the bottom, greyed out, with how to learn them.</li>
 <li><strong>Your choice:</strong> switch back to Blizzard's list with one button at any time.</li>
 </ul>
-<p>No setup. Open Crafting Orders, pick the Patron tab, and the cards are there.</p>
+<p>No setup. Open Crafting Orders, pick a tab, and the cards are there.</p>
 
 <p><span style="color: #ffd100;"><strong>A Card for Every Order</strong></span><br>Each card shows the item, the profit in large print, the quality the patron asked for and how you can reach it, and how long the order has left: amber under 6 hours, red under 2. Underneath: the materials you'd supply with their quality and cost, and the reward gold and items. A coloured edge sums it up: green for a good order, amber when it needs concentration or better materials, red for a loss or a quality you can't reach, grey for recipes you don't know.</p>
 
@@ -17,21 +22,28 @@
 
 <p><span style="color: #ffd100;"><strong>The Full Breakdown on Hover</strong></span><br>Hover a card to see where the numbers come from: each reward item and its value, each material you supply and its cost, the profit, the quality needed and how much concentration it takes against what you have. Hold <strong>Shift</strong> for the item's own tooltip, and click the card to open the order as usual.</p>
 
-<p><span style="color: #ffd100;"><strong>Prices</strong></span><br>Material costs and reward values come from <strong>TradeSkillMaster</strong> or <strong>Auctionator</strong>, whichever you have installed. Without either, the cards still show quality reach, time left and the gold reward, just no cost or profit. Soulbound rewards and currencies such as knowledge are marked as bonus rewards rather than given a made-up gold value.</p>
+<p><span style="color: #ffd100;"><strong>The Order Queue</strong></span><br>Press <strong>+</strong> on a card (or right-click it) to queue it, or <strong>Queue all</strong> for every profitable order on the board; chat says why any were left out. The queue sits beside the profession window with a button per order: <strong>Claim</strong>, <strong>Craft</strong>, <strong>Hand in</strong>. Craft uses the planned materials and concentration, checks the quality just before crafting, and tells you when you're short of materials or away from your crafting table. <strong>Next</strong> does the next step for you.</p>
+
+<p><span style="color: #ffd100;"><strong>Shopping List</strong></span><br>Everything the queued orders still need, counted once across the queue, with what you have and what it costs. It opens anywhere, the Auction House included. With <strong>Auction Coach</strong>, one click adds it to Auction Coach's shopping list, which tells you when each item is listed cheaply. With <strong>Auctionator</strong>, one click makes an Auctionator shopping list.</p>
+
+<p><span style="color: #ffd100;"><strong>Prices and Values</strong></span><br>Material costs and reward values come from <strong>Auction Coach</strong>, <strong>TradeSkillMaster</strong> or <strong>Auctionator</strong>, whichever you have installed. Reward items count at what they sell for after the AH cut. Without a price addon, the cards still show quality reach, time left and the gold reward. The <strong>Values</strong> button lets you say what your concentration is worth (taken off the profit of orders that need it) and what Moxie, knowledge and other rewards without a price are worth to you; Moxie has an estimate from what a Master's Surplus bag holds.</p>
 
 <p><span style="color: #ffd100;"><strong>Commands</strong></span></p>
 <ul>
 <li><code>/pp</code>: help</li>
 <li><code>/pp cards</code>: use the card view</li>
 <li><code>/pp classic</code>: use Blizzard's list (or the button beside the order tabs)</li>
-<li><code>/pp options</code>: the options page (also in Esc > Options > AddOns)</li>
+<li><code>/pp queue</code>: show or hide the order queue</li>
+<li><code>/pp shop</code>: the shopping list</li>
+<li><code>/pp options</code>: the options page (also in Esc > Options > AddOns, or left-click the minimap button)</li>
+<li><code>/pp minimap</code>: hide or show the minimap button</li>
 <li><code>/pp debug</code>: debug messages for bug reports</li>
 </ul>
 
 <p><span style="color: #ffd100;"><strong>Good to Know</strong></span></p>
 <ul>
 <li>Retail (Midnight) only.</li>
-<li>Only the Patron tab changes. Public, Guild and Personal orders keep Blizzard's list.</li>
+<li>Public orders grouped by item keep Blizzard's view; the cards show once you pick an item.</li>
 <li>Profit marked with <strong>*</strong> means some items had no price yet, so the real number may be a little higher or lower.</li>
 <li>Bugs and ideas are welcome in the comments or on our <a href="https://discord.gg/wz7fw6jM9Z">Discord</a>.</li>
 </ul>
