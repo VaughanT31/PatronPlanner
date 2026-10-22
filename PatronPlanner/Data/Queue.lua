@@ -115,16 +115,24 @@ function Queue.Clear()
     Changed()
 end
 
+-- The profession the window has open (orders only list for that one).
+local function OpenProfession()
+    local ok, info = pcall(C_TradeSkillUI.GetChildProfessionInfo)
+    return ok and info and Util.Clean(info.profession) or nil
+end
+
 -- New records for the tab on screen: refresh the snapshots of queued
 -- orders, and drop queued orders that are gone. A full list (fresh, on the
 -- patron, personal or guild tab) drops the orders of that type it no
--- longer has; public lists only show one item at a time, so public orders
--- are only dropped when they expire.
+-- longer has, for the open profession only: another profession's orders
+-- aren't in this list. Public lists only show one item at a time, so
+-- public orders are only dropped when they expire.
 function Queue.Update(records, orderType, fresh)
     local byKey = {}
     for _, rec in ipairs(records) do byKey[rec.key] = rec end
     local list = Queue.List()
     local now = GetServerTime()
+    local profession = records[1] and records[1].profession or OpenProfession()
     local changed = false
     for index = #list, 1, -1 do
         local entry = list[index]
@@ -134,7 +142,8 @@ function Queue.Update(records, orderType, fresh)
             Queue.recs[entry.key] = rec
         elseif (entry.expires or now + 1) <= now
             or (fresh and orderType and entry.orderType == orderType
-                and orderType ~= Enum.CraftingOrderType.Public) then
+                and orderType ~= Enum.CraftingOrderType.Public
+                and profession and entry.profession == profession) then
             -- A claimed order leaves the list but isn't gone: keep it.
             local claimed = C_CraftingOrders.GetClaimedOrder()
             if not (claimed and tostring(claimed.orderID) == entry.key) then

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Fixed: with two crafting professions, opening one profession's orders took the other profession's orders out of your queue. Each profession's queued orders now stay until they're done, expire or are gone from that profession's own list.
+
 ## 0.4.0
 
 - **Every order tab:** the cards now show on Personal and Guild orders too, and on Public orders once you pick an item. Personal and guild cards show the customer and their note, and the Public tab shows how many claims you have left today.

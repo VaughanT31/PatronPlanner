@@ -2,7 +2,7 @@
 ## Title: Patron Planner
 ## Notes: Shows which patron crafting orders are worth doing: cost, reward, profit and the quality you can reach.
 ## Author: CtrlShift_Zed
-## Version: 0.4.0
+## Version: 0.4.1
 ## Category: CtrlShift_Zed
 ## SavedVariables: PatronPlannerDB
 ## OptionalDeps: Blizzard_Professions, AuctionCoach, Auctionator, TradeSkillMaster, TrustCrafter
