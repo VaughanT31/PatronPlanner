@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+- **See what's left after every hand-in:** when you hand in an order from the queue, its card goes straight away and the order list refreshes by itself, so the tab shows the orders still waiting without pressing Search.
+
 ## 0.4.1
 
 - Fixed: with two crafting professions, opening one profession's orders took the other profession's orders out of your queue. Each profession's queued orders now stay until they're done, expire or are gone from that profession's own list.

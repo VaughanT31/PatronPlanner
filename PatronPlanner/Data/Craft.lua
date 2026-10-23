@@ -198,6 +198,8 @@ events:SetScript("OnEvent", function(_, event, ...)
         if key then crafted[key] = nil end
         if key and (result == 0 or (Enum.CraftingOrderResult and result == Enum.CraftingOrderResult.Ok)) then
             Queue.Remove(key)
+            -- Show what's left on the tab.
+            if ns.Board then ns.Board:RequestAgain(key) end
         end
     elseif event == "CRAFTINGORDERS_CLAIMED_ORDER_REMOVED" then
         wipe(crafted)

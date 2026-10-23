@@ -9,7 +9,8 @@
 -- Hooks on ProfessionsFrame.OrdersPage (Blizzard_Professions):
 --   ShowGeneric            new orders arrived: draw the cards
 --   SetCraftingOrderType   tab changed: the new tab decides on its next list
---   SendOrderRequest       a search started: dim the cards until it lands
+--   SendOrderRequest       a search started: dim the cards until it lands,
+--                          and keep the request to send again after a hand-in
 
 local _, ns = ...
 local L, Util, Orders, Card = ns.L, ns.Util, ns.Orders, ns.Card
@@ -349,6 +350,41 @@ function Board:Refresh(fresh)
     self:Layout()
 end
 
+-- After a hand-in from the queue the game's list still has the order, so
+-- its card goes at once and the tab's last search is sent again, as its
+-- Search button would. The game turns requests away for a few seconds
+-- after the last one, so it waits a moment, tries once more if nothing
+-- came back, and never leaves the cards dimmed.
+local AGAIN_DELAY, AGAIN_TRIES, AGAIN_WAIT = 1.5, 2, 4
+
+function Board:RequestAgain(doneKey)
+    if doneKey and self.records then
+        for i = #self.records, 1, -1 do
+            if self.records[i].key == doneKey then table.remove(self.records, i) end
+        end
+        if self.active then self:Layout() end
+    end
+    self:SendAgain(AGAIN_TRIES)
+end
+
+function Board:SendAgain(tries)
+    local page, request = self.page, self.lastRequest
+    if not (page and request and page.BrowseFrame and page.BrowseFrame:IsVisible()) then return end
+    C_Timer.After(AGAIN_DELAY, function()
+        if not page.BrowseFrame:IsVisible() then return end
+        local ok = pcall(page.SendOrderRequest, page, request)
+        C_Timer.After(AGAIN_WAIT, function()
+            if not Board.waiting then return end
+            if ok and tries > 1 then
+                Board:SendAgain(tries - 1)
+            else
+                Board.waiting = false
+                if Board.active then Board:Refresh() end
+            end
+        end)
+    end)
+end
+
 function Board:Recheck()
     if self.recheckPending or (self.rechecks or 0) >= RECHECKS then return end
     self.recheckPending = true
@@ -577,9 +613,11 @@ function Board:Install()
         -- whether the cards show.
         Board:UpdateToggle()
     end)
-    hooksecurefunc(page, "SendOrderRequest", function()
+    hooksecurefunc(page, "SendOrderRequest", function(_, request)
         Board.waiting = true
         if Board.active then Board.panel:SetAlpha(0.45) end
+        -- The tab's own search (first page only, not "more rows").
+        if type(request) == "table" and (request.offset or 0) == 0 then Board.lastRequest = request end
     end)
     -- Back on the list after viewing (or crafting) an order: read it again.
     if page.BrowseFrame.HookScript then
