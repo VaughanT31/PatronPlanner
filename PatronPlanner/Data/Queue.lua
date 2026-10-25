@@ -144,9 +144,9 @@ function Queue.Update(records, orderType, fresh)
             or (fresh and orderType and entry.orderType == orderType
                 and orderType ~= Enum.CraftingOrderType.Public
                 and profession and entry.profession == profession) then
-            -- A claimed order leaves the list but isn't gone: keep it.
-            local claimed = C_CraftingOrders.GetClaimedOrder()
-            if not (claimed and tostring(claimed.orderID) == entry.key) then
+            -- A claimed order leaves the list but isn't gone: keep it, and
+            -- one being claimed too (the list can arrive before the claim).
+            if not (ns.Craft and ns.Craft.Holds(entry.key)) then
                 table.remove(list, index)
                 Queue.recs[entry.key] = nil
                 changed = true

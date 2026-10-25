@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.3
+
+- Fixed: pressing **Claim** on the next order right after a hand-in, before the order list had refreshed, could take that order out of your queue, leaving the other rows on **Busy** and the claimed order to craft by hand. The order you're claiming now stays in the queue, so its row goes on to **Craft**.
+
 ## 0.4.2
 
 - **See what's left after every hand-in:** when you hand in an order from the queue, its card goes straight away and the order list refreshes by itself, so the tab shows the orders still waiting without pressing Search.

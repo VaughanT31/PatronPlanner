@@ -21,6 +21,10 @@ ns.Craft = Craft
 local LOCK_TIMEOUT = 6
 local lockedUntil = 0
 local crafted = {}        -- key -> true once Craft was pressed, until submitted
+-- The order Claim was pressed for, until the game says it's ours: an order
+-- list that arrives in between no longer has it, and mustn't drop it.
+local CLAIM_HOLD = 30
+local claiming, claimingUntil = nil, 0
 
 local function Locked()
     return GetTime() < lockedUntil
@@ -110,6 +114,7 @@ local function Run(entry, step)
     if step.action == "claim" then
         -- The order ID as the game gave it (it can be a big number).
         local orderID = rec and rec.orderID or tonumber(entry.key)
+        claiming, claimingUntil = entry.key, GetTime() + CLAIM_HOLD
         C_CraftingOrders.ClaimOrder(orderID, profession)
     elseif step.action == "craft" then
         local reagents, concentrating = Orders.CraftReagents(rec)
@@ -175,6 +180,13 @@ function Craft.ClaimedKey()
     return select(2, Claimed())
 end
 
+-- True for the claimed order and one being claimed: the queue keeps them
+-- when they leave the order list.
+function Craft.Holds(key)
+    if key == Craft.ClaimedKey() then return true end
+    return claiming == key and GetTime() < claimingUntil
+end
+
 -- The game's answers unlock the buttons.
 local events = CreateFrame("Frame")
 for _, event in ipairs({
@@ -201,8 +213,14 @@ events:SetScript("OnEvent", function(_, event, ...)
             -- Show what's left on the tab.
             if ns.Board then ns.Board:RequestAgain(key) end
         end
+    elseif event == "CRAFTINGORDERS_CLAIM_ORDER_RESPONSE" then
+        local result = ...
+        if not (result == 0 or (Enum.CraftingOrderResult and result == Enum.CraftingOrderResult.Ok)) then
+            claiming = nil
+        end
     elseif event == "CRAFTINGORDERS_CLAIMED_ORDER_REMOVED" then
         wipe(crafted)
+        claiming = nil
     end
     Unlock()
 end)
