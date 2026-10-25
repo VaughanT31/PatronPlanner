@@ -1,6 +1,6 @@
 -- Patron Planner - the minimap button: left-click opens the options,
--- right-click the shopping list, Shift-click shows or hides the queue
--- panel. Drag it around the minimap. /pp minimap hides or shows it.
+-- right-click the shopping list, middle-click the knowledge window,
+-- Shift-click shows or hides the queue panel. Drag it around the minimap. /pp minimap hides or shows it.
 
 local _, ns = ...
 local L, Util, Queue, Shopping = ns.L, ns.Util, ns.Queue, ns.Shopping
@@ -43,6 +43,7 @@ local function Tooltip(self)
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L.MINIMAP_LEFT, 0.9, 0.9, 0.9)
     GameTooltip:AddLine(L.MINIMAP_RIGHT, 0.9, 0.9, 0.9)
+    GameTooltip:AddLine(L.MINIMAP_MIDDLE, 0.9, 0.9, 0.9)
     GameTooltip:AddLine(L.MINIMAP_SHIFT, 0.9, 0.9, 0.9)
     GameTooltip:AddLine(L.MINIMAP_DRAG, 0.6, 0.6, 0.6)
     GameTooltip:Show()
@@ -53,7 +54,7 @@ local function Create()
     button:SetSize(31, 31)
     button:SetFrameStrata("MEDIUM")
     button:SetFrameLevel(8)
-    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
     button:RegisterForDrag("LeftButton")
     button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
@@ -87,6 +88,8 @@ local function Create()
             if ns.QueuePanel then ns.QueuePanel:Toggle() end
         elseif mouse == "RightButton" then
             if ns.ShoppingList then ns.ShoppingList:Toggle() end
+        elseif mouse == "MiddleButton" then
+            if ns.KnowledgeWindow then ns.KnowledgeWindow:Toggle() end
         elseif ns.Options and ns.Options.Open then
             ns.Options.Open()
         end

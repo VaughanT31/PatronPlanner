@@ -182,9 +182,23 @@ function Board:Build(list)
     end)
     self.valuesButton:HookScript("OnLeave", GameTooltip_Hide)
 
+    -- Knowledge still to earn (UI/KnowledgeWindow.lua).
+    self.knowledgeButton = Chip(panel, function() if ns.KnowledgeWindow then ns.KnowledgeWindow:Toggle() end end)
+    self.knowledgeButton.accent = true
+    PixelUtil.SetPoint(self.knowledgeButton, "RIGHT", self.valuesButton, "LEFT", -6, 0)
+    self.knowledgeButton:SetLabel(L.KP_CHIP)
+    PaintChip(self.knowledgeButton)
+    self.knowledgeButton:HookScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine(L.KP_TITLE, 1, 0.82, 0)
+        GameTooltip:AddLine(L.KP_CHIP_TIP, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    self.knowledgeButton:HookScript("OnLeave", GameTooltip_Hide)
+
     self.summary = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     self.summary:SetPoint("TOPLEFT", 10, -9)
-    self.summary:SetPoint("RIGHT", self.valuesButton, "LEFT", -10, 0)
+    self.summary:SetPoint("RIGHT", self.knowledgeButton, "LEFT", -10, 0)
     self.summary:SetJustifyH("LEFT")
     self.summary:SetWordWrap(false)
 

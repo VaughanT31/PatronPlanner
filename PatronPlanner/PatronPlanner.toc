@@ -2,7 +2,7 @@
 ## Title: Patron Planner
 ## Notes: Shows which patron crafting orders are worth doing: cost, reward, profit and the quality you can reach.
 ## Author: CtrlShift_Zed
-## Version: 0.4.3
+## Version: 0.5.0
 ## Category: CtrlShift_Zed
 ## SavedVariables: PatronPlannerDB
 ## OptionalDeps: Blizzard_Professions, AuctionCoach, Auctionator, TradeSkillMaster, TrustCrafter
@@ -21,6 +21,7 @@ Data\Orders.lua
 Data\Queue.lua
 Data\Craft.lua
 Data\Shopping.lua
+Data\Knowledge.lua
 
 UI\Card.lua
 UI\Board.lua
@@ -28,4 +29,5 @@ UI\Values.lua
 UI\Options.lua
 UI\QueuePanel.lua
 UI\ShoppingList.lua
+UI\KnowledgeWindow.lua
 UI\Minimap.lua

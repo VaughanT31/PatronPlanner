@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+- **Knowledge:** a new window for every Midnight crafting and gathering profession on your character. Open it with the **Knowledge** button above the cards, a middle-click on the minimap button or `/pp knowledge`.
+  - **This week:** the Thalassian Treatise, your trainer's weekly quest, the two weekly treasure drops (crafters), the gathering and disenchanting drops with how many you've had (gatherers), and the Darkmoon Faire quest while the Faire is on. Each says what's done, what's left and what to do about it, and how many points are left this week.
+  - **Points waiting in your bags:** a treatise, notes or drop you haven't used yet is marked, so no knowledge sits forgotten.
+  - **Treatise and notes:** the first time you use one, Patron Planner learns the weekly check the game keeps for it, so from then on every character shows it done or not, even for one used before you installed Patron Planner. A use the game turns down ("nothing new to learn") marks it done for the week too.
+  - **Treasures:** all 8 one-time treasures per profession, the ones still to find first, with the zone and coordinates. Click one for a waypoint (TomTom when it's installed, otherwise a map pin).
+  - **Unspent knowledge** and about how much more finishes the specialisation tree, read when you open the profession.
+  - **All characters:** every character's weekly points left, treasures left and unspent knowledge at a glance, saved each time you log in on them.
+
 ## 0.4.3
 
 - Fixed: pressing **Claim** on the next order right after a hand-in, before the order list had refreshed, could take that order out of your queue, leaving the other rows on **Busy** and the claimed order to craft by hand. The order you're claiming now stays in the queue, so its row goes on to **Craft**.

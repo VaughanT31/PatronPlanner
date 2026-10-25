@@ -4,6 +4,7 @@
 --     version  = DB_VERSION,
 --     settings = { ... },        see DEFAULTS
 --     queues   = { ["Name-Realm"] = { ... } },   Data/Queue.lua
+--     knowledge = { child, chars },               Data/Knowledge.lua
 --   }
 
 local ADDON_NAME, ns = ...
@@ -91,6 +92,11 @@ SlashCmdList.PATRONPLANNER = function(input)
         if ns.QueuePanel then ns.QueuePanel:Toggle() end
     elseif command == "shop" or command == "shopping" then
         if ns.ShoppingList then ns.ShoppingList:Toggle() end
+    elseif command == "knowledge" or command == "kp" then
+        if ns.KnowledgeWindow then ns.KnowledgeWindow:Toggle() end
+    elseif command == "kpscan" then
+        -- Not in the help: finds the hidden weekly knowledge quests in game.
+        if ns.KnowledgeWindow then ns.KnowledgeWindow:ShowScan() end
     elseif command == "minimap" then
         if ns.MinimapButton then ns.MinimapButton.Toggle() end
     elseif command == "debug" then
