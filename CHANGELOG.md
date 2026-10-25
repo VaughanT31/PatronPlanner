@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- **Knowledge, gathering and disenchanting drops:** Patron Planner now learns the weekly check the game keeps for each drop as you loot it, so every character shows how many it has had, even drops looted before Patron Planner was installed. Until a drop has been learned, the count starts from install.
+
 ## 0.5.0
 
 - **Knowledge:** a new window for every Midnight crafting and gathering profession on your character. Open it with the **Knowledge** button above the cards, a middle-click on the minimap button or `/pp knowledge`.

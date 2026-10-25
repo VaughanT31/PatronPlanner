@@ -17,6 +17,8 @@
 --     child = { [baseSkillLine] = midnightSkillLine },
 --     flags = { [itemID] = questID },   the weekly quest an item flags, learned
 --                                       the first time it's used
+--     dropFlags = { [itemID] = { questID, ... } },   the same for gathering
+--                                       drops, one quest per drop, learned on loot
 --     chars = { ["Name-Realm"] = { class, resetAt, used = { [itemID] = true },
 --               looted = { [itemID] = n }, profs = { [base] = summary } } },
 --   }
@@ -181,17 +183,24 @@ P[197] = { name = "Tailoring", treatise = 245756, notes = 263460, notesPoints = 
         { 89083, 2444, 61.6, 85.0, "Satin Throw Pillow" },
     } }
 
+-- Where Midnight's hidden weekly quests sit, for /pp kpscan and for
+-- learning which quest a drop flags.
+local SCAN_FROM, SCAN_TO = 92500, 95500
+
 local TREASURE_POINTS = 3
 local TREATISE_POINTS = 1
 local FAIRE_POINTS = 3
 
 -- Items whose use or loot we count, to the profession they belong to.
-local USED, LOOTED = {}, {}
+local USED, LOOTED, GATHERED = {}, {}, {}
 for base, prof in pairs(P) do
     USED[prof.treatise] = base
     USED[prof.notes] = base
     for _, step in ipairs(prof.gather or {}) do
-        for _, itemID in ipairs(step.items) do LOOTED[itemID] = base end
+        for _, itemID in ipairs(step.items) do
+            LOOTED[itemID] = base
+            GATHERED[itemID] = true
+        end
     end
     for _, drop in ipairs(prof.drops or {}) do LOOTED[drop[1]] = base end
 end
@@ -234,6 +243,9 @@ local function Store()
     store.chars = store.chars or {}
     -- itemID -> the hidden weekly quest using it flags, learned in game.
     store.flags = store.flags or {}
+    -- itemID -> { quests }: a gathering drop flags one quest per drop of the
+    -- week (5 for the common one), learned as they're looted.
+    store.dropFlags = store.dropFlags or {}
     return store
 end
 
@@ -326,12 +338,18 @@ function Knowledge.Status(base)
         Weekly({ kind = "drop", itemID = itemID, points = points,
             done = Done(quest) or (me.looted[itemID] or 0) > 0, inBags = InBags(itemID) })
     end
+    local dropFlags = Store().dropFlags
     for _, step in ipairs(prof.gather or {}) do
-        local have, inBags = 0, 0
+        local have, flagged, inBags = 0, 0, 0
         for _, itemID in ipairs(step.items) do
             have = have + (me.looted[itemID] or 0)
             inBags = inBags + InBags(itemID)
+            for _, quest in ipairs(dropFlags[itemID] or {}) do
+                if Done(quest) then flagged = flagged + 1 end
+            end
         end
+        -- The learned quests know about drops looted before install too.
+        have = math.max(have, flagged)
         Weekly({ kind = "gather", itemID = step.items[1], points = step.points * step.count,
             have = math.min(have, step.count), need = step.count, done = have >= step.count, inBags = inBags })
     end
@@ -416,8 +434,6 @@ end
 -- of IDs around the known weekly ones, with their titles where the game
 -- has one (hidden tracking quests have none). Run on a character that has
 -- done its week, it shows which IDs the weekly sources use.
-local SCAN_FROM, SCAN_TO = 92500, 95500
-
 function Knowledge.Scan()
     local lines = {}
     for quest = SCAN_FROM, SCAN_TO do
@@ -472,6 +488,38 @@ end
 
 -- The item being used, for the game's answer: { itemID, at }.
 local trying
+
+-- Completed quests as they were just before the last gathering or
+-- disenchanting cast, to spot the one quest a drop flags.
+local known, knownAt = nil, 0
+local function Remember()
+    if InCombatLockdown() or GetTime() - knownAt < 2 then return end
+    known, knownAt = CompletedSet(), GetTime()
+end
+
+-- A gathering drop looted: the one Midnight-era quest that went done since
+-- the cast is that drop's quest for this week.
+local function LearnDrop(itemID)
+    local store, before = Store(), known
+    if not (store and before) then return end
+    C_Timer.After(1, function()
+        local now, new = CompletedSet(), nil
+        for quest in pairs(now or {}) do
+            if not before[quest] and quest >= SCAN_FROM and quest <= SCAN_TO then
+                if new then return end -- more than one: can't tell which
+                new = quest
+            end
+        end
+        if not new then return end
+        local list = store.dropFlags[itemID] or {}
+        store.dropFlags[itemID] = list
+        if not tContains(list, new) then
+            list[#list + 1] = new
+            Util.Debug("knowledge drop", itemID, "flags quest", new)
+        end
+        known = now
+    end)
+end
 
 -- A treatise or notes used: counted once its stack goes down. The first
 -- time an item is used, the hidden weekly quest the game flags for it is
@@ -533,7 +581,7 @@ local OWN_LOOT = LOOT_ITEM_SELF and LOOT_ITEM_SELF:match("^(.-)%%s")
 local events = CreateFrame("Frame")
 for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "CHAT_MSG_LOOT", "QUEST_TURNED_IN",
     "TRADE_SKILL_SHOW", "TRAIT_CONFIG_UPDATED", "CURRENCY_DISPLAY_UPDATE", "SKILL_LINES_CHANGED",
-    "UI_ERROR_MESSAGE" }) do
+    "UI_ERROR_MESSAGE", "UNIT_SPELLCAST_SENT" }) do
     pcall(events.RegisterEvent, events, event)
 end
 local pending = false
@@ -549,6 +597,9 @@ events:SetScript("OnEvent", function(_, event, ...)
     if not ns.db then return end
     if event == "UI_ERROR_MESSAGE" then
         Refused()
+    elseif event == "UNIT_SPELLCAST_SENT" then
+        -- Gathering and disenchanting start with a cast: remember what's done.
+        if ... == "player" then Remember() end
     elseif event == "CHAT_MSG_LOOT" then
         local text, _, _, _, _, _, _, _, _, _, _, guid = ...
         text, guid = Util.Clean(text), Util.Clean(guid)
@@ -563,6 +614,7 @@ events:SetScript("OnEvent", function(_, event, ...)
         local count = tonumber(text:match("|rx(%d+)")) or 1
         local me = Knowledge.Me()
         if me then me.looted[itemID] = (me.looted[itemID] or 0) + count end
+        if GATHERED[itemID] then LearnDrop(itemID) end
         Soon()
     elseif event == "TRADE_SKILL_SHOW" or event == "TRAIT_CONFIG_UPDATED" then
         -- The open profession's Midnight skill line (its newest expansion,
