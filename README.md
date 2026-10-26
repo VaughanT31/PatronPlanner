@@ -2,6 +2,8 @@
 
 A World of Warcraft addon (Midnight, retail) that shows which crafting orders are worth doing, right on the Crafting Orders tabs (Patron, Personal, Guild and Public): what the materials you supply will cost, what the reward is worth, the profit, and whether you can reach the requested quality with cheap materials, the materials you own, or only with concentration.
 
+**New here?** The [wiki](wiki/Home.md) explains every feature step by step (also on the [website](https://ctrlshiftzed.com/wiki/patron-planner/)). Questions it doesn't answer: ask on [Discord](https://discord.gg/wz7fw6jM9Z).
+
 Queue the orders you want and work through them from one panel: claim, craft with the planned materials, hand in. The shopping list shows what the queue still needs and can send it to Auction Coach or Auctionator.
 
 The Knowledge window shows what each of your professions can still earn this week, knowledge items waiting in your bags, the one-time treasures with waypoints, your unspent points, and every character at a glance.
