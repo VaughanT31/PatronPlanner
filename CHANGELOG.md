@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.3
+
+- **Pin it:** the lock beside the close button keeps the Knowledge window open through reloads, logins and loading screens, and Escape leaves it open. It also remembers where you put it.
+- **Catch-up:** each profession now shows how much catch-up knowledge is still available, beside your unspent points, and in the All characters view.
+- **Fold professions:** click a profession's name to fold it away. The window grows and shrinks with what's shown.
+- **Layout:** a smaller Knowledge window, and its border shows on every side.
+- **Borders:** the order queue's first row, the cards, the shopping list and the Values window could lose one side of their border at some UI scales. Every border is now drawn one screen pixel wide on all four sides.
+
 ## 0.5.2
 
 - **Knowledge window, Hide completed:** a new tick box shows only what's still to do this week. Anything waiting in your bags stays listed until you use it.
@@ -7,11 +15,7 @@
 - **Treatises and notepads now count however you use them.** Some bags use items in a way Patron Planner couldn't see; it now watches for the item's own spell as you use it, and as a backup notices the item leaving your bags with no bank, mailbox or vendor open. The first use also learns the game's own weekly record for that item, for your whole account, so characters that used theirs before Patron Planner was installed show it too.
 - **Mark it yourself:** right-click a treatise or trainer's quest line to tick it for this week when Patron Planner missed the use (right-click again to undo).
 - **Trainer's weekly quest:** now ticks once the quest is turned in and its notepad used, even when the notepad was used from a bag addon or before Patron Planner was installed. Every profession's trainer quest is now known, so it ticks even for one done before Patron Planner was installed.
-- **Pin it:** the lock beside the close button keeps the Knowledge window open through reloads, logins and loading screens, and Escape leaves it open. It also remembers where you put it.
-- **Catch-up:** each profession now shows how much catch-up knowledge is still available, beside your unspent points, and in the All characters view.
-- **Fold professions:** click a profession's name to fold it away. The window grows and shrinks with what's shown.
-- **Layout:** a smaller window, the points no longer run into the text beside them, and the border shows on every side.
-- **Borders:** the order queue's first row, the cards, the shopping list and the Values window could lose one side of their border at some UI scales. Every border is now drawn one screen pixel wide on all four sides.
+- **Layout:** the points no longer run into the text beside them, and the window is a little wider.
 - **Drops** show a plain name while the game loads the item's name, instead of "...".
 
 ## 0.5.1
