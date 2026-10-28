@@ -26,10 +26,10 @@ local ROW = 46
 local FOOTER = 118
 local BUTTON = 82
 
+-- Background only: borders are drawn a screen pixel wide (Util.PixelBorder),
+-- since a 1-unit backdrop edge can vanish on one side at some UI scales.
 local BACKDROP = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
 }
 
 local REACH_TEXT = {
@@ -60,7 +60,7 @@ end
 local function Row(parent)
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetBackdrop(BACKDROP)
-    Util.CrispEdges(row)
+    Util.PixelBorder(row)
     row:SetHeight(ROW - 4)
     row:RegisterForClicks("RightButtonUp")
 
@@ -114,16 +114,16 @@ local function Row(parent)
         GameTooltip:Hide()
     end)
     row:SetBackdropColor(0.07, 0.07, 0.08, 0.92)
-    row:SetBackdropBorderColor(0.28, 0.26, 0.22, 0.9)
+    row:SetPixelBorderColor(0.28, 0.26, 0.22, 0.9)
     return row
 end
 
 function QueuePanel:Build()
     local frame = CreateFrame("Frame", "PatronPlannerQueuePanel", ProfessionsFrame, "BackdropTemplate")
     frame:SetBackdrop(BACKDROP)
-    Util.CrispEdges(frame)
     frame:SetBackdropColor(0.05, 0.05, 0.06, 0.97)
-    frame:SetBackdropBorderColor(1, 0.82, 0, 0.45)
+    Util.PixelBorder(frame)
+    frame:SetPixelBorderColor(1, 0.82, 0, 0.45)
     frame:SetSize(WIDTH, HEIGHT)
     frame:SetPoint("TOPLEFT", ProfessionsFrame, "TOPRIGHT", 6, 0)
     frame:EnableMouse(true)
@@ -258,7 +258,7 @@ function QueuePanel:Refresh()
         if conc and conc > 0 then parts[#parts + 1] = Util.Paint("amber", L.QUEUE_CONC:format(conc)) end
         if entry.customer then parts[#parts + 1] = Util.Paint("grey", L.CARD_FOR:format(Ambiguate(entry.customer, "short"))) end
         row.Info:SetText(table.concat(parts, "  "))
-        row:SetBackdropBorderColor(entry.key == claimedKey and 1 or 0.28, entry.key == claimedKey and 0.82 or 0.26,
+        row:SetPixelBorderColor(entry.key == claimedKey and 1 or 0.28, entry.key == claimedKey and 0.82 or 0.26,
             entry.key == claimedKey and 0 or 0.22, 0.9)
 
         local step = Craft.Step(entry)

@@ -21,8 +21,6 @@ local BOX = 70
 
 local BACKDROP = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
 }
 
 -- "12.5" -> 12.5; blank, 0, negative or not a number -> nil.
@@ -106,9 +104,9 @@ end
 function Values:Build(board)
     local frame = CreateFrame("Frame", nil, board.panel, "BackdropTemplate")
     frame:SetBackdrop(BACKDROP)
-    Util.CrispEdges(frame)
+    Util.PixelBorder(frame)
     frame:SetBackdropColor(0.06, 0.06, 0.07, 0.98)
-    frame:SetBackdropBorderColor(1, 0.82, 0, 0.5)
+    frame:SetPixelBorderColor(1, 0.82, 0, 0.5)
     frame:SetWidth(WIDTH)
     frame:SetFrameLevel(board.panel:GetFrameLevel() + 50)
     frame:EnableMouse(true)

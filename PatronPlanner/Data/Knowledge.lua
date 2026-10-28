@@ -19,6 +19,9 @@
 --                                       the first time it's used
 --     dropFlags = { [itemID] = { questID, ... } },   the same for gathering
 --                                       drops, one quest per drop, learned on loot
+--     notesQuests = { [base] = questID },   the trainer's weekly quest (the
+--                                       one whose reward is the notes), learned
+--                                       on turn-in; Engineering's is known
 --     chars = { ["Name-Realm"] = { class, resetAt, used = { [itemID] = true },
 --               looted = { [itemID] = n }, profs = { [base] = summary } } },
 --   }
@@ -42,14 +45,17 @@ function Knowledge.Zone(map)
     return name or ZONES[map] or "?"
 end
 
--- Per profession, by its base skill line. drops: weekly treasure drops of
+-- Per profession, by its base skill line. treatiseQuest and notesQuest: the
+-- hidden weekly quest a used treatise flags, and the trainer's weekly quest
+-- (its reward is the notes). catchup: the currency whose cap less what's
+-- been earned is the catch-up knowledge still to get. drops: weekly treasure drops of
 -- crafting professions { itemID, quest, points }. gather: gathering and
 -- disenchanting drops { items, count, points } (the last one is the rare
 -- final drop). treasures: { quest, map, x, y, name }, 3 points each.
 local P = {}
 Knowledge.PROFESSIONS = P
 
-P[171] = { name = "Alchemy", treatise = 245755, notes = 263454, notesPoints = 1, faire = 29506,
+P[171] = { name = "Alchemy", treatise = 245755, treatiseQuest = 95127, notes = 263454, notesPoints = 1, notesQuest = 93690, faire = 29506, catchup = 3189,
     drops = { { 259188, 93528, 1 }, { 259189, 93529, 1 } },
     treasures = {
         { 89117, 2393, 47.8, 51.8, "Pristine Potion" },
@@ -61,7 +67,7 @@ P[171] = { name = "Alchemy", treatise = 245755, notes = 263454, notesPoints = 1,
         { 89118, 2405, 32.8, 43.3, "Failed Experiment" },
         { 89112, 2444, 41.9, 40.6, "Vial of Voidstorm Oddities" },
     } }
-P[164] = { name = "Blacksmithing", treatise = 245763, notes = 263455, notesPoints = 2, faire = 29508,
+P[164] = { name = "Blacksmithing", treatise = 245763, treatiseQuest = 95128, notes = 263455, notesPoints = 2, notesQuest = 93691, faire = 29508, catchup = 3199,
     drops = { { 259190, 93530, 2 }, { 259191, 93531, 2 } },
     treasures = {
         { 89183, 2393, 49.2, 61.3, "Sin'dorei Master's Forgemace" },
@@ -73,7 +79,7 @@ P[164] = { name = "Blacksmithing", treatise = 245763, notes = 263455, notesPoint
         { 89182, 2413, 66.3, 50.9, "Rutaani Floratender's Sword" },
         { 89181, 2444, 30.6, 69.0, "Voidstorm Defense Spear" },
     } }
-P[333] = { name = "Enchanting", treatise = 245759, notes = 263464, notesPoints = 3, faire = 29510,
+P[333] = { name = "Enchanting", treatise = 245759, treatiseQuest = 95129, notes = 263464, notesPoints = 3, notesQuest = 93698, faire = 29510, catchup = 3198,
     drops = { { 259192, 93532, 2 }, { 259193, 93533, 2 } },
     gather = { { items = { 267654 }, count = 5, points = 1 }, { items = { 267655 }, count = 1, points = 4 } },
     treasures = {
@@ -86,7 +92,7 @@ P[333] = { name = "Enchanting", treatise = 245759, notes = 263464, notesPoints =
         { 89104, 2413, 37.7, 65.3, "Entropic Shard" },
         { 89102, 2405, 35.5, 58.8, "Pure Void Crystal" },
     } }
-P[202] = { name = "Engineering", treatise = 245809, notes = 263456, notesPoints = 1, faire = 29511,
+P[202] = { name = "Engineering", treatise = 245809, treatiseQuest = 95138, notes = 263456, notesPoints = 1, notesQuest = 93692, faire = 29511, catchup = 3197,
     drops = { { 259194, 93534, 1 }, { 259195, 93535, 1 } },
     treasures = {
         { 89133, 2393, 51.2, 74.6, "One Engineer's Junk" },
@@ -98,7 +104,7 @@ P[202] = { name = "Engineering", treatise = 245809, notes = 263456, notesPoints 
         { 89137, 2444, 54.1, 51.1, "Ethereal Stormwrench" },
         { 89134, 2444, 28.9, 39.1, "Miniaturized Transport Skiff" },
     } }
-P[182] = { name = "Herbalism", treatise = 245761, notes = 263462, notesPoints = 3, faire = 29514,
+P[182] = { name = "Herbalism", treatise = 245761, treatiseQuest = 95130, notes = 263462, notesPoints = 3, notesQuest = 93700, faire = 29514, catchup = 3196,
     gather = { { items = { 238465 }, count = 5, points = 1 }, { items = { 238466 }, count = 1, points = 4 } },
     treasures = {
         { 89160, 2393, 49.0, 75.9, "Simple Leaf Pruners" },
@@ -110,7 +116,7 @@ P[182] = { name = "Herbalism", treatise = 245761, notes = 263462, notesPoints = 
         { 89159, 2413, 36.6, 25.1, "Lightbloom Root" },
         { 89157, 2413, 76.1, 51.1, "Harvester's Sickle" },
     } }
-P[773] = { name = "Inscription", treatise = 245757, notes = 263457, notesPoints = 2, faire = 29515,
+P[773] = { name = "Inscription", treatise = 245757, treatiseQuest = 95131, notes = 263457, notesPoints = 2, notesQuest = 93693, faire = 29515, catchup = 3195,
     drops = { { 259196, 93536, 2 }, { 259197, 93537, 2 } },
     treasures = {
         { 89073, 2393, 47.7, 50.4, "Songwriter's Pen" },
@@ -122,7 +128,7 @@ P[773] = { name = "Inscription", treatise = 245757, notes = 263457, notesPoints 
         { 89070, 2413, 52.4, 52.6, "Intrepid Explorer's Marker" },
         { 89067, 2444, 60.7, 84.3, "Void-Touched Quill" },
     } }
-P[755] = { name = "Jewelcrafting", treatise = 245760, notes = 263458, notesPoints = 3, faire = 29516,
+P[755] = { name = "Jewelcrafting", treatise = 245760, treatiseQuest = 95133, notes = 263458, notesPoints = 3, notesQuest = 93694, faire = 29516, catchup = 3194,
     drops = { { 259198, 93538, 2 }, { 259199, 93539, 2 } },
     treasures = {
         { 89122, 2393, 50.6, 56.6, "Sin'dorei Masterwork Chisel" },
@@ -134,7 +140,7 @@ P[755] = { name = "Jewelcrafting", treatise = 245760, notes = 263458, notesPoint
         { 89128, 2444, 54.2, 51.2, "Ethereal Gem Pliers" },
         { 89126, 2444, 62.7, 53.4, "Shattered Glass" },
     } }
-P[165] = { name = "Leatherworking", treatise = 245758, notes = 263459, notesPoints = 2, faire = 29517,
+P[165] = { name = "Leatherworking", treatise = 245758, treatiseQuest = 95134, notes = 263459, notesPoints = 2, notesQuest = 93695, faire = 29517, catchup = 3193,
     drops = { { 259200, 93540, 2 }, { 259201, 93541, 2 } },
     treasures = {
         { 89096, 2393, 44.8, 56.2, "Artisan's Considered Order" },
@@ -146,7 +152,7 @@ P[165] = { name = "Leatherworking", treatise = 245758, notes = 263459, notesPoin
         { 89095, 2413, 36.1, 25.2, "Haranir Leatherworking Knife" },
         { 89093, 2444, 53.7, 51.7, "Patterns: Beyond the Void" },
     } }
-P[186] = { name = "Mining", treatise = 245762, notes = 263463, notesPoints = 3, faire = 29518,
+P[186] = { name = "Mining", treatise = 245762, treatiseQuest = 95135, notes = 263463, notesPoints = 3, notesQuest = 93709, faire = 29518, catchup = 3192,
     gather = { { items = { 237496 }, count = 5, points = 1 }, { items = { 237506 }, count = 1, points = 3 } },
     treasures = {
         { 89147, 2395, 38.0, 45.4, "Solid Ore Punchers" },
@@ -158,7 +164,7 @@ P[186] = { name = "Mining", treatise = 245762, notes = 263463, notesPoints = 3, 
         { 89148, 2444, 28.7, 38.5, "Glimmering Void Pearl" },
         { 89146, 2444, 54.2, 51.5, "Lost Voidstorm Satchel" },
     } }
-P[393] = { name = "Skinning", treatise = 245828, notes = 263461, notesPoints = 3, faire = 29519,
+P[393] = { name = "Skinning", treatise = 245828, treatiseQuest = 95136, notes = 263461, notesPoints = 3, notesQuest = 93710, faire = 29519, catchup = 3191,
     gather = { { items = { 238625, 238627 }, count = 5, points = 1 }, { items = { 238626 }, count = 1, points = 3 } },
     treasures = {
         { 89171, 2393, 43.2, 55.7, "Sin'dorei Tanning Oil" },
@@ -170,7 +176,7 @@ P[393] = { name = "Skinning", treatise = 245828, notes = 263461, notesPoints = 3
         { 89166, 2413, 76.0, 51.0, "Lightbloom Afflicted Hide" },
         { 89169, 2444, 45.5, 42.3, "Voidstorm Leather Sample" },
     } }
-P[197] = { name = "Tailoring", treatise = 245756, notes = 263460, notesPoints = 2, faire = 29520,
+P[197] = { name = "Tailoring", treatise = 245756, treatiseQuest = 95137, notes = 263460, notesPoints = 2, notesQuest = 93696, faire = 29520, catchup = 3190,
     drops = { { 259202, 93542, 2 }, { 259203, 93543, 2 } },
     treasures = {
         { 89079, 2393, 35.9, 61.3, "A Really Nice Curtain" },
@@ -192,10 +198,11 @@ local TREATISE_POINTS = 1
 local FAIRE_POINTS = 3
 
 -- Items whose use or loot we count, to the profession they belong to.
-local USED, LOOTED, GATHERED = {}, {}, {}
+local USED, LOOTED, GATHERED, NOTES = {}, {}, {}, {}
 for base, prof in pairs(P) do
     USED[prof.treatise] = base
     USED[prof.notes] = base
+    NOTES[prof.notes] = base
     for _, step in ipairs(prof.gather or {}) do
         for _, itemID in ipairs(step.items) do
             LOOTED[itemID] = base
@@ -246,6 +253,7 @@ local function Store()
     -- itemID -> { quests }: a gathering drop flags one quest per drop of the
     -- week (5 for the common one), learned as they're looted.
     store.dropFlags = store.dropFlags or {}
+    store.notesQuests = store.notesQuests or {}
     return store
 end
 
@@ -313,6 +321,18 @@ local function ReadSpecs(child)
     return unspent, remaining
 end
 
+-- Catch-up knowledge still to get: the catch-up currency's cap less what's
+-- been earned toward it. nil when the game won't say.
+function Knowledge.Catchup(base)
+    local prof = P[base]
+    if not (prof and prof.catchup and C_CurrencyInfo) then return nil end
+    local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, prof.catchup)
+    if not (ok and info) then return nil end
+    local max, earned = Util.Clean(info.maxQuantity), Util.Clean(info.totalEarned)
+    if not (max and earned) or max <= 0 then return nil end
+    return math.max(0, max - earned)
+end
+
 -- Everything for one profession of this character:
 --   { base, name, weekly = { lines }, weeklyLeft, weeklyTotal,
 --     treasures = { lines }, treasuresLeft, unspent, remaining }
@@ -330,9 +350,14 @@ function Knowledge.Status(base)
         return me.used[itemID] == true or (flags[itemID] ~= nil and Done(flags[itemID]))
     end
     Weekly({ kind = "treatise", label = L.KP_TREATISE, itemID = prof.treatise, points = TREATISE_POINTS,
-        done = Studied(prof.treatise), inBags = InBags(prof.treatise) })
+        done = Studied(prof.treatise) or Done(prof.treatiseQuest), inBags = InBags(prof.treatise) })
+    -- The trainer's quest done and its notes gone from the bags: used, even
+    -- when the use itself wasn't seen (from a bag addon, or before install).
+    local notesQuest = prof.notesQuest or Store().notesQuests[base]
+    local notesInBags = InBags(prof.notes)
     Weekly({ kind = "notes", label = L.KP_NOTES, itemID = prof.notes, points = prof.notesPoints,
-        done = Studied(prof.notes), inBags = InBags(prof.notes) })
+        done = Studied(prof.notes) or (notesQuest ~= nil and Done(notesQuest) and notesInBags == 0),
+        inBags = notesInBags })
     for _, drop in ipairs(prof.drops or {}) do
         local itemID, quest, points = drop[1], drop[2], drop[3]
         Weekly({ kind = "drop", itemID = itemID, points = points,
@@ -384,6 +409,7 @@ function Knowledge.Status(base)
 
     local saved = me.profs[base]
     status.unspent, status.remaining = saved and saved.unspent, saved and saved.remaining
+    status.catchup = Knowledge.Catchup(base)
     return status
 end
 
@@ -401,6 +427,7 @@ function Knowledge.Save()
         local status = Knowledge.Status(base)
         saved.weeklyLeft, saved.weeklyTotal = status.weeklyLeft, status.weeklyTotal
         saved.treasuresLeft = status.treasuresLeft
+        saved.catchup = status.catchup
         saved.at = GetServerTime()
     end
     -- Professions this character no longer has.
@@ -475,6 +502,15 @@ end
 local function MarkUsed(itemID)
     local me = Knowledge.Me()
     if me then me.used[itemID] = true end
+    Changed()
+end
+
+-- Right-click in the window: the player says a treatise or notes was used
+-- this week (or wasn't), for a use Patron Planner couldn't see.
+function Knowledge.ToggleUsed(itemID)
+    local me = Knowledge.Me()
+    if not (me and USED[itemID]) then return end
+    me.used[itemID] = not me.used[itemID] or nil
     Changed()
 end
 
@@ -553,6 +589,69 @@ local function Used(itemID)
     end)
 end
 
+-- Uses the hooks above miss: a bag addon's or the default bag's secure
+-- button uses the item without going through Lua. So while a treatise or
+-- notes sits in the bags, its count and the Midnight-era quests already
+-- done are kept; when the count goes down and a quest went done with it,
+-- that was a use (and that quest is the item's weekly flag). A count that
+-- goes down with no quest is a move to the bank, not a use.
+local watched -- { counts = { [itemID] = n }, quests = { [questID] = true } }
+
+-- The interaction windows open now (bank, mailbox, vendor, trade, AH...),
+-- by type, from PLAYER_INTERACTION_MANAGER_FRAME_SHOW and _HIDE.
+Knowledge.open = {}
+
+local function RangeDone()
+    local set = {}
+    for quest = SCAN_FROM, SCAN_TO do
+        if Done(quest) then set[quest] = true end
+    end
+    return set
+end
+
+local function Watch()
+    local counts, any = {}, false
+    for _, base in ipairs(Knowledge.MyProfessions()) do
+        for _, itemID in ipairs({ P[base].treatise, P[base].notes }) do
+            local n = InBags(itemID)
+            if n > 0 then counts[itemID], any = n, true end
+        end
+    end
+    watched = any and { counts = counts, quests = RangeDone() } or nil
+end
+
+local function CheckWatched()
+    if not watched then return Watch() end
+    local dropped = {}
+    for itemID, n in pairs(watched.counts) do
+        if InBags(itemID) < n then dropped[#dropped + 1] = itemID end
+    end
+    if #dropped == 0 then return Watch() end
+    local before = watched.quests
+    -- Gone with no bank, mailbox, vendor, trade or Auction House open: it
+    -- can only have been used, even if no quest shows it.
+    local nowhere = not next(Knowledge.open)
+    -- The quest flag lands a moment after the item goes.
+    C_Timer.After(1.5, function()
+        local new = {}
+        for quest in pairs(RangeDone()) do
+            if not before[quest] then new[#new + 1] = quest end
+        end
+        local store, me = Store(), Knowledge.Me()
+        if store and me and (#new >= #dropped or nowhere) then
+            for _, itemID in ipairs(dropped) do
+                if not store.flags[itemID] and #dropped == 1 and #new == 1 then
+                    store.flags[itemID] = new[1]
+                    Util.Debug("knowledge item", itemID, "flags quest", new[1], "(from the bags)")
+                end
+                me.used[itemID] = true
+            end
+            Changed()
+        end
+        Watch()
+    end)
+end
+
 -- "You have studied these notes extensively and there is nothing new to
 -- learn from them": a use refused right away means this week's is done.
 local function Refused()
@@ -575,13 +674,81 @@ if C_Item and C_Item.UseItemByName then
     end)
 end
 
--- "You receive loot: ", for loot lines that come without the looter's GUID.
+-- The trainer's weekly quest, learned from its reward: a quest turned in
+-- and a profession's notes received within a few seconds of each other,
+-- in either order.
+local lastTurnIn, lastNotes
+local function LearnNotesQuest()
+    if not (lastTurnIn and lastNotes) or math.abs(lastTurnIn.at - lastNotes.at) > 5 then return end
+    local store = Store()
+    if store and not P[lastNotes.base].notesQuest then
+        store.notesQuests[lastNotes.base] = lastTurnIn.quest
+        Util.Debug("knowledge notes", lastNotes.base, "from quest", lastTurnIn.quest)
+    end
+    lastTurnIn, lastNotes = nil, nil
+end
+
+-- "You receive loot: " and "You receive item: ", for loot lines that come
+-- without the looter's GUID.
 local OWN_LOOT = LOOT_ITEM_SELF and LOOT_ITEM_SELF:match("^(.-)%%s")
+local OWN_PUSH = LOOT_ITEM_PUSHED_SELF and LOOT_ITEM_PUSHED_SELF:match("^(.-)%%s")
+local function Mine(text)
+    return (OWN_LOOT and text:sub(1, #OWN_LOOT) == OWN_LOOT) or (OWN_PUSH and text:sub(1, #OWN_PUSH) == OWN_PUSH)
+end
+
+-- Using a treatise or notes casts its own spell (a 2 second cast that
+-- grants the knowledge), however the item was clicked. spellID -> itemID,
+-- asked from the game per item, filled in as item data loads.
+local SPELL_ITEM = {}
+local function ItemSpells()
+    for itemID in pairs(USED) do
+        local ok, _, spellID = pcall(C_Item.GetItemSpell, itemID)
+        spellID = ok and Util.Clean(spellID)
+        if spellID then
+            SPELL_ITEM[spellID] = itemID
+        elseif C_Item.RequestLoadItemDataByID then
+            pcall(C_Item.RequestLoadItemDataByID, itemID)
+        end
+    end
+end
+
+local function Cast(spellID)
+    spellID = Util.Clean(spellID)
+    if not spellID then return end
+    -- An item whose data hadn't loaded yet may be the one: ask again (out of
+    -- combat, where these are used).
+    if not SPELL_ITEM[spellID] and not InCombatLockdown() then ItemSpells() end
+    local itemID = SPELL_ITEM[spellID]
+    if not itemID then return end
+    Util.Debug("knowledge item", itemID, "used (cast", spellID .. ")")
+    MarkUsed(itemID)
+    -- The quest the game flags for it, at any ID: the one that went done
+    -- between the cast starting (UNIT_SPELLCAST_SENT) and now. Kept for the
+    -- whole account, so every character can be checked, even for a use
+    -- made before Patron Planner was installed.
+    local store, before = Store(), known
+    if not (store and before) or store.flags[itemID] then return end
+    C_Timer.After(1.5, function()
+        local new
+        for quest in pairs(CompletedSet() or {}) do
+            if not before[quest] then
+                if new then return end -- more than one: can't tell which
+                new = quest
+            end
+        end
+        if new then
+            store.flags[itemID] = new
+            Util.Debug("knowledge item", itemID, "flags quest", new, "(from its cast)")
+            Changed()
+        end
+    end)
+end
 
 local events = CreateFrame("Frame")
-for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "CHAT_MSG_LOOT", "QUEST_TURNED_IN",
+for _, event in ipairs({ "PLAYER_ENTERING_WORLD", "CHAT_MSG_LOOT", "QUEST_TURNED_IN", "UNIT_SPELLCAST_SUCCEEDED",
     "TRADE_SKILL_SHOW", "TRAIT_CONFIG_UPDATED", "CURRENCY_DISPLAY_UPDATE", "SKILL_LINES_CHANGED",
-    "UI_ERROR_MESSAGE", "UNIT_SPELLCAST_SENT" }) do
+    "UI_ERROR_MESSAGE", "UNIT_SPELLCAST_SENT", "BAG_UPDATE_DELAYED",
+    "PLAYER_INTERACTION_MANAGER_FRAME_SHOW", "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" }) do
     pcall(events.RegisterEvent, events, event)
 end
 local pending = false
@@ -597,19 +764,37 @@ events:SetScript("OnEvent", function(_, event, ...)
     if not ns.db then return end
     if event == "UI_ERROR_MESSAGE" then
         Refused()
+    elseif event == "BAG_UPDATE_DELAYED" then
+        if not InCombatLockdown() then CheckWatched() end
+    elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+        local kind = ...
+        if kind then Knowledge.open[kind] = true end
+    elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
+        -- Hidden after the bag update it caused, so a move still counts as one.
+        local kind = ...
+        if kind then C_Timer.After(0.5, function() Knowledge.open[kind] = nil end) end
     elseif event == "UNIT_SPELLCAST_SENT" then
         -- Gathering and disenchanting start with a cast: remember what's done.
         if ... == "player" then Remember() end
+    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+        local unit, _, spellID = ...
+        if unit == "player" then Cast(spellID) end
     elseif event == "CHAT_MSG_LOOT" then
         local text, _, _, _, _, _, _, _, _, _, _, guid = ...
         text, guid = Util.Clean(text), Util.Clean(guid)
         if not text then return end
         if guid then
             if guid ~= UnitGUID("player") then return end
-        elseif not (OWN_LOOT and text:sub(1, #OWN_LOOT) == OWN_LOOT) then
+        elseif not Mine(text) then
             return
         end
         local itemID = tonumber(text:match("|Hitem:(%d+)"))
+        if itemID and NOTES[itemID] then
+            lastNotes = { base = NOTES[itemID], at = GetTime() }
+            LearnNotesQuest()
+            Soon()
+            return
+        end
         if not (itemID and LOOTED[itemID]) then return end
         local count = tonumber(text:match("|rx(%d+)")) or 1
         local me = Knowledge.Me()
@@ -630,8 +815,19 @@ events:SetScript("OnEvent", function(_, event, ...)
         local store = Store()
         if child and base and P[base] and store then store.child[base] = child end
         Soon()
+    elseif event == "QUEST_TURNED_IN" then
+        local quest = Util.Clean((...))
+        if quest then
+            lastTurnIn = { quest = quest, at = GetTime() }
+            LearnNotesQuest()
+        end
+        Soon()
     elseif event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(5, Changed)
+        C_Timer.After(5, function()
+            ItemSpells()
+            Changed()
+            Watch()
+        end)
     else
         Soon()
     end

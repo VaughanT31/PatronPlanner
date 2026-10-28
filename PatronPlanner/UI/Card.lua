@@ -34,8 +34,6 @@ local REACH_TEXT = {
 
 local BACKDROP = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
 }
 
 local function Verdict(rec)
@@ -95,7 +93,7 @@ end
 function Card.Create(parent)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
     card:SetBackdrop(BACKDROP)
-    Util.CrispEdges(card)
+    Util.PixelBorder(card)
     card:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     card.Strip = card:CreateTexture(nil, "ARTWORK")
@@ -228,13 +226,13 @@ function Card:Paint()
     local c = Util.COLOR[self.verdict or "grey"]
     if self.hover then
         self:SetBackdropColor(0.16, 0.15, 0.13, 0.96)
-        self:SetBackdropBorderColor(c[1], c[2], c[3], 0.9)
+        self:SetPixelBorderColor(c[1], c[2], c[3], 0.9)
     else
         self:SetBackdropColor(0.07, 0.07, 0.08, 0.92)
         if self.queued then
-            self:SetBackdropBorderColor(1, 0.82, 0, 0.75)
+            self:SetPixelBorderColor(1, 0.82, 0, 0.75)
         else
-            self:SetBackdropBorderColor(0.28, 0.26, 0.22, 0.9)
+            self:SetPixelBorderColor(0.28, 0.26, 0.22, 0.9)
         end
     end
 end

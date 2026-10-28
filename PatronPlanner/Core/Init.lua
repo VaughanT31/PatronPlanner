@@ -41,6 +41,9 @@ local DEFAULTS = {
         queueSkipConc = false,
         queueSkipBuy = false,
         queueConcLimit = true,
+        -- Knowledge window: professions folded away, by base skill line.
+        -- (kpPinned, kpHideDone and kpPos are set as the player uses it.)
+        kpCollapsed = {},
         debug = false,
     },
     queues = {},

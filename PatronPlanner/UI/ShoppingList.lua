@@ -23,8 +23,6 @@ local FOOTER = 70
 
 local BACKDROP = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
 }
 
 local function Row(parent)
@@ -59,9 +57,9 @@ end
 function ShoppingList:Build()
     local frame = CreateFrame("Frame", "PatronPlannerShoppingList", UIParent, "BackdropTemplate")
     frame:SetBackdrop(BACKDROP)
-    Util.CrispEdges(frame)
+    Util.PixelBorder(frame)
     frame:SetBackdropColor(0.05, 0.05, 0.06, 0.97)
-    frame:SetBackdropBorderColor(1, 0.82, 0, 0.45)
+    frame:SetPixelBorderColor(1, 0.82, 0, 0.45)
     frame:SetSize(WIDTH, HEIGHT)
     frame:SetPoint("CENTER", 300, 0)
     frame:SetFrameStrata("HIGH")
