@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- **Fixed: orders with a Spark said Can't reach.** Before crafting, Patron Planner asks the game which quality the craft reaches. The customer's Spark was sent along with that question, and the game then gave no answer, which the queue took as Can't reach. Only materials that come in qualities are sent now, and if the game still doesn't answer, the craft is no longer blocked. The cards ask the same way, so Spark orders show their real quality reach instead of Not sure.
+
 ## 0.5.3
 
 - **Pin it:** the lock beside the close button keeps the Knowledge window open through reloads, logins and loading screens, and Escape leaves it open. It also remembers where you put it.

@@ -178,20 +178,36 @@ local function YourReagents(slots, high, forCraft)
 end
 
 -- The customer's reagents plus yours, for asking the game about quality.
-local function Reagents(order, slots, high)
+-- Only materials that come in qualities, like YourReagents: the customer's
+-- Spark (every patron and personal order with one supplies it) made the
+-- game's answer come back empty. everything adds the rest of both.
+local function Reagents(order, slots, high, everything)
     local list = {}
     for _, reagent in ipairs(order.reagents or {}) do
-        if reagent.reagentInfo then list[#list + 1] = reagent.reagentInfo end
+        local info = reagent.reagentInfo
+        local itemID = info and info.reagent and info.reagent.itemID
+        if info and (everything or (itemID and (C_TradeSkillUI.GetItemReagentQualityByItemInfo(itemID) or 0) > 0)) then
+            list[#list + 1] = info
+        end
     end
-    for _, item in ipairs(YourReagents(slots, high, false)) do list[#list + 1] = item end
+    for _, item in ipairs(YourReagents(slots, high, everything)) do list[#list + 1] = item end
     return list
 end
 
-local function Operation(order, reagents, concentration)
+local function Ask(order, reagents, concentration)
     local ok, info = pcall(C_TradeSkillUI.GetCraftingOperationInfoForOrder,
         order.spellID, reagents, order.orderID, concentration)
     if ok then return info end
     return nil
+end
+
+-- Which quality a craft reaches with the low or high materials: asked with
+-- the quality materials only, then, when that comes back empty, with
+-- every material in.
+local function Operation(order, slots, high, concentration)
+    local info = Ask(order, Reagents(order, slots, high, false), concentration)
+    if info then return info end
+    return Ask(order, Reagents(order, slots, high, true), concentration)
 end
 
 -- Ingenuity's chance (0 to 1) from the game's stat list, or 0.
@@ -221,8 +237,7 @@ end
 local function Reach(rec, order, slots)
     if not rec.learned then return "unlearned" end
     rec.plan = { high = false, conc = false }
-    local low = Reagents(order, slots, false)
-    local info = Operation(order, low, false)
+    local info = Operation(order, slots, false, false)
     if info then rec.concentrationID = Util.Clean(info.concentrationCurrencyID) end
     if rec.need <= 1 then return "any" end
     -- The game didn't answer: say so rather than guess.
@@ -230,19 +245,18 @@ local function Reach(rec, order, slots)
     if not info.isQualityCraft then return "any" end
     if info.craftingQuality >= rec.need then return "cheap" end
 
-    local withConc = Operation(order, low, true)
+    local withConc = Operation(order, slots, false, true)
     if withConc and withConc.craftingQuality >= rec.need then
         rec.plan.conc = true
         UseConcentration(rec, withConc)
         return "conc"
     end
-    local high = Reagents(order, slots, true)
-    local best = Operation(order, high, false)
+    local best = Operation(order, slots, true, false)
     if best and best.craftingQuality >= rec.need then
         rec.plan.high = true
         return "better"
     end
-    local bestConc = Operation(order, high, true)
+    local bestConc = Operation(order, slots, true, true)
     if bestConc and bestConc.craftingQuality >= rec.need then
         rec.plan.high, rec.plan.conc = true, true
         UseConcentration(rec, bestConc)
@@ -440,9 +454,15 @@ end
 -- crafting, with the exact list that will be used.)
 function Orders.StillReaches(rec)
     if rec.need <= 1 then return true end
-    local list = Reagents(rec.order, rec.slots or {}, rec.plan and rec.plan.high)
-    local info = Operation(rec.order, list, rec.plan and rec.plan.conc or false)
-    return info ~= nil and (not info.isQualityCraft or info.craftingQuality >= rec.need)
+    local info = Operation(rec.order, rec.slots or {}, rec.plan and rec.plan.high or false, rec.plan and rec.plan.conc or false)
+    -- Still no answer, either way: don't block the craft on that.
+    -- The card already said "Not sure", and the game checks the craft itself.
+    if not info then
+        Util.Debug("no quality answer for order", rec.orderID, "recipe", rec.recipeID)
+        return true
+    end
+    Util.Debug("order", rec.orderID, "reaches", info.craftingQuality, "needs", rec.need)
+    return not info.isQualityCraft or info.craftingQuality >= rec.need
 end
 
 -- What's still missing to craft it: { { itemID, name, need }, ... }.
