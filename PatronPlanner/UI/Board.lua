@@ -196,9 +196,23 @@ function Board:Build(list)
     end)
     self.knowledgeButton:HookScript("OnLeave", GameTooltip_Hide)
 
+    -- Orders on your other characters (UI/AltOrdersWindow.lua).
+    self.altsButton = Chip(panel, function() if ns.AltOrdersWindow then ns.AltOrdersWindow:Toggle() end end)
+    self.altsButton.accent = true
+    PixelUtil.SetPoint(self.altsButton, "RIGHT", self.knowledgeButton, "LEFT", -6, 0)
+    self.altsButton:SetLabel(L.ALTS_CHIP)
+    PaintChip(self.altsButton)
+    self.altsButton:HookScript("OnEnter", function(button)
+        GameTooltip:SetOwner(button, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine(L.ALTS_TITLE, 1, 0.82, 0)
+        GameTooltip:AddLine(L.ALTS_CHIP_TIP, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    self.altsButton:HookScript("OnLeave", GameTooltip_Hide)
+
     self.summary = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     self.summary:SetPoint("TOPLEFT", 10, -9)
-    self.summary:SetPoint("RIGHT", self.knowledgeButton, "LEFT", -10, 0)
+    self.summary:SetPoint("RIGHT", self.altsButton, "LEFT", -10, 0)
     self.summary:SetJustifyH("LEFT")
     self.summary:SetWordWrap(false)
 
@@ -362,6 +376,11 @@ function Board:Refresh(fresh)
     self.records = records
     if ns.Queue then ns.Queue.Update(records, self.page and self.page.orderType, fresh) end
     self:Layout()
+    -- After Layout, so what's saved has the shared-out materials in its profit.
+    if fresh and ns.AltOrders and self.page and self.page.orderType == Enum.CraftingOrderType.Npc then
+        ns.AltOrders.Save(records)
+        if ns.AltOrdersWindow then ns.AltOrdersWindow:Refresh() end
+    end
 end
 
 -- After a hand-in from the queue the game's list still has the order, so

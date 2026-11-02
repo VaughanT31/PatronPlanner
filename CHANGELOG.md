@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0
+
+- **Orders on your characters:** the new **Alts** button on the board (or `/pp alts`) shows which of your characters has good patron orders waiting, the most profit first: each profession, how many orders it has, how many you can craft and the best three. The game only lists orders for the character at the crafting table, so each character saves theirs when you open the Patron tab, and the window says how long ago that was. Expired orders drop out by themselves.
+- **Cheapest mix of qualities:** when an order needs better materials, Patron Planner no longer prices everything at the best quality. It works out the cheapest split that still reaches the order's quality, for example 6 of the lower and 2 of the higher, shows both on the card, and the queue crafts with exactly that. Shopping lists follow it too.
+
 ## 0.5.5
 
 - **Fixed: the same materials paid for several orders.** Every card counted everything you own as its own, so two orders could both say *All owned* with only enough for one. Queued orders now take their materials first, in queue order, and every other card shows what's left, with its cost, *to buy* amount and the **Nothing to buy** filter to match. The tooltip says how many are kept for your queue, and **Queue all** counts them as it goes.

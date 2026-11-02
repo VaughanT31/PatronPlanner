@@ -95,6 +95,8 @@ SlashCmdList.PATRONPLANNER = function(input)
         if ns.QueuePanel then ns.QueuePanel:Toggle() end
     elseif command == "shop" or command == "shopping" then
         if ns.ShoppingList then ns.ShoppingList:Toggle() end
+    elseif command == "alts" then
+        if ns.AltOrdersWindow then ns.AltOrdersWindow:Toggle() end
     elseif command == "knowledge" or command == "kp" then
         if ns.KnowledgeWindow then ns.KnowledgeWindow:Toggle() end
     elseif command == "kpscan" then

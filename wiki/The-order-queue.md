@@ -14,7 +14,7 @@ Queued orders take the materials you own first, in queue order, so the same stac
 The queue sits beside the profession window with a button per order:
 
 1. **Claim** the order.
-2. **Craft** it. Patron Planner uses the planned materials and concentration, checks the quality just before crafting, and tells you if you're short of materials or away from your crafting table.
+2. **Craft** it. Patron Planner uses the planned materials (the cheapest mix of qualities that reaches the order) and concentration, checks the quality just before crafting, and tells you if you're short of materials or away from your crafting table.
 3. **Hand in.**
 
 **Next** does the next step for you, so a whole queue goes by one button.

@@ -4,7 +4,7 @@ local _, ns = ...
 
 ns.L = {
     ADDON_TITLE = "Patron Planner",
-    HELP = "Patron Planner %s. Open your profession's Crafting Orders.\n  /pp cards  use the card view\n  /pp classic  use Blizzard's list\n  /pp queue  show or hide the order queue\n  /pp shop  the shopping list\n  /pp knowledge  knowledge still to earn\n  /pp options  the options page\n  /pp minimap  hide or show the minimap button\n  /pp debug  toggle debug messages",
+    HELP = "Patron Planner %s. Open your profession's Crafting Orders.\n  /pp cards  use the card view\n  /pp classic  use Blizzard's list\n  /pp queue  show or hide the order queue\n  /pp shop  the shopping list\n  /pp knowledge  knowledge still to earn\n  /pp alts  orders on your other characters\n  /pp options  the options page\n  /pp minimap  hide or show the minimap button\n  /pp debug  toggle debug messages",
     SET_CARDS = "Card view on. It shows next time the Patron tab loads.",
     SET_CLASSIC = "Blizzard's list on. Use the Cards button by the order tabs to switch back.",
     SET_DEBUG = "Debug messages: %s",
@@ -71,8 +71,8 @@ ns.L = {
     TIP_REACH_ANY = "Any quality will do.",
     TIP_REACH_CHEAP = "The cheapest materials reach it, no concentration needed.",
     TIP_REACH_CONC = "The cheapest materials reach it with concentration.",
-    TIP_REACH_BETTER = "Needs better quality materials. Cost is shown at the best quality.",
-    TIP_REACH_BETTER_CONC = "Needs better quality materials and concentration.",
+    TIP_REACH_BETTER = "Needs better quality materials. Cost is shown at the cheapest mix of qualities that gets there.",
+    TIP_REACH_BETTER_CONC = "Needs better quality materials and concentration. Cost is shown at the cheapest mix of qualities that gets there.",
     TIP_REACH_NONE = "You can't reach this quality yet, even with the best materials and concentration.",
     TIP_REACH_UNLEARNED = "",
     TIP_CONCENTRATION = "Concentration",
@@ -183,6 +183,14 @@ ns.L = {
     STEP_FAILED = "the game refused the craft: %s",
 
     -- Shopping list
+    ALTS_CHIP = "Alts",
+    ALTS_TITLE = "Orders on your characters",
+    ALTS_CHIP_TIP = "Which character has good patron orders waiting, from the last time each one opened its Patron tab.",
+    ALTS_EMPTY = "Nothing saved yet. Open the Patron tab on each crafter once, and their orders show here.",
+    ALTS_NOTE = "Saved when each character last opened the Patron tab, at the prices then.",
+    ALTS_PROFESSION = "%s: %d orders, %d you can craft",
+    ALTS_SEEN = "seen %s ago",
+    ALTS_MORE = "and %d more",
     SHOP_TITLE = "Shopping list",
     SHOP_EMPTY = "Queue some orders and what they need shows here.",
     SHOP_NONE = "The queued orders need nothing from you.",

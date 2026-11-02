@@ -22,8 +22,9 @@
 --     need          requested quality (0 or 1 means any)
 --     reach         "any" | "cheap" | "conc" | "better" | "betterConc" |
 --                   "none" | "unknown" | "unlearned"
---     plan          { high = bool, conc = bool } the materials and
---                   concentration the reach was found with
+--     plan          { high = bool, conc = bool, mix } the materials and
+--                   concentration the reach was found with; mix is the
+--                   cheapest split of qualities when high is true
 --     concCost      concentration the plan needs, when it needs any
 --     concAvg       concCost after Ingenuity's average refund
 --     concWorth     what concAvg is worth at the player's gold per point
@@ -160,20 +161,37 @@ local function Pick(entry, high)
     return best or entry.options[1]
 end
 
--- Your materials for a craft at the lowest or highest quality. Only
--- materials that come in qualities go in: the game fills in the rest
+-- What fills a slot: { { option, count }, ... }. high is true for the best
+-- quality, false for the lowest, or a mix: { [slotIndex] = how many of the
+-- best quality }, the rest at the lowest. A slot a mix doesn't name stays
+-- at the best quality.
+local function Parts(entry, high)
+    local count = entry.slot.quantityRequired or 1
+    if type(high) == "table" and IsBasic(entry.slot) and #entry.options > 1 then
+        local best = math.min(high[entry.slot.slotIndex] or count, count)
+        local parts = {}
+        if count > best then parts[#parts + 1] = { option = entry.options[1], count = count - best } end
+        if best > 0 then parts[#parts + 1] = { option = entry.options[#entry.options], count = best } end
+        return parts
+    end
+    return { { option = Pick(entry, high and true or false), count = count } }
+end
+
+-- Your materials for a craft at the lowest or highest quality, or a mix.
+-- Only materials that come in qualities go in: the game fills in the rest
 -- itself, and adding them makes its quality answer come back empty.
 -- forCraft also adds the other required slots you fill (sparks).
 local function YourReagents(slots, high, forCraft)
     local list = {}
     for _, entry in ipairs(slots) do
-        local option = Pick(entry, high)
-        if (IsBasic(entry.slot) and option.quality > 0) or (forCraft and not IsBasic(entry.slot)) then
-            list[#list + 1] = {
-                reagent = { itemID = option.reagent.itemID },
-                dataSlotIndex = entry.slot.dataSlotIndex,
-                quantity = entry.slot.quantityRequired or 1,
-            }
+        for _, part in ipairs(Parts(entry, high)) do
+            if (IsBasic(entry.slot) and part.option.quality > 0) or (forCraft and not IsBasic(entry.slot)) then
+                list[#list + 1] = {
+                    reagent = { itemID = part.option.reagent.itemID },
+                    dataSlotIndex = entry.slot.dataSlotIndex,
+                    quantity = part.count,
+                }
+            end
         end
     end
     return list
@@ -234,6 +252,64 @@ local function UseConcentration(rec, info)
     end
 end
 
+-- The cheapest mix of qualities that still reaches the order's quality,
+-- given that all of the best does: the slot that saves the most per item
+-- gives up its best-quality items first, as many as it can, found by
+-- halving. Each try asks the game, so tries are capped, and a mix is kept
+-- for a few minutes as long as the game says it still reaches. Returns nil
+-- when no slot can give anything up.
+local MIX_ASKS, MIX_KEEP = 24, 300
+local mixes = {}
+
+local function FindMix(order, slots, need, concentration)
+    local function Reaches(mix)
+        local info = Operation(order, slots, mix, concentration)
+        return info ~= nil and info.craftingQuality ~= nil and info.craftingQuality >= need
+    end
+
+    local key = tostring(order.orderID) .. (concentration and ":c" or ":")
+    local kept = mixes[key]
+    if kept and GetServerTime() - kept.at < MIX_KEEP and Reaches(kept.mix) then return kept.mix end
+
+    local mix, adjustable = {}, {}
+    for _, entry in ipairs(slots) do
+        if IsBasic(entry.slot) and #entry.options > 1 then
+            local count = entry.slot.quantityRequired or 1
+            local low = Pricing.Price(entry.options[1].reagent.itemID)
+            local best = Pricing.Price(entry.options[#entry.options].reagent.itemID)
+            local saving = low and best and best - low
+            mix[entry.slot.slotIndex] = count
+            -- With prices, only where the lower quality really is cheaper.
+            if not Pricing.Available() or (saving and saving > 0) then
+                adjustable[#adjustable + 1] = { index = entry.slot.slotIndex, count = count, saving = saving or 0 }
+            end
+        end
+    end
+    table.sort(adjustable, function(a, b) return a.saving > b.saving end)
+
+    local asks, changed = 0, false
+    for _, item in ipairs(adjustable) do
+        local low, high = 0, item.count
+        while low < high and asks < MIX_ASKS do
+            local middle = math.floor((low + high) / 2)
+            mix[item.index] = middle
+            asks = asks + 1
+            if Reaches(mix) then high = middle else low = middle + 1 end
+        end
+        mix[item.index] = high
+        if high < item.count then changed = true end
+    end
+    if not changed then return nil end
+    mixes[key] = { mix = mix, at = GetServerTime() }
+    return mix
+end
+
+-- What the plan's materials are, for Parts.
+local function Materials(rec)
+    local plan = rec.plan
+    return plan and (plan.mix or plan.high) or false
+end
+
 -- Can the order reach its quality with cheap materials, with
 -- concentration, with the best materials, or not at all? Sets rec.plan.
 local function Reach(rec, order, slots)
@@ -256,12 +332,14 @@ local function Reach(rec, order, slots)
     local best = Operation(order, slots, true, false)
     if best and best.craftingQuality >= rec.need then
         rec.plan.high = true
+        rec.plan.mix = FindMix(order, slots, rec.need, false)
         return "better"
     end
     local bestConc = Operation(order, slots, true, true)
     if bestConc and bestConc.craftingQuality >= rec.need then
         rec.plan.high, rec.plan.conc = true, true
-        UseConcentration(rec, bestConc)
+        rec.plan.mix = FindMix(order, slots, rec.need, true)
+        UseConcentration(rec, rec.plan.mix and Operation(order, slots, rec.plan.mix, true) or bestConc)
         return "betterConc"
     end
     return "none"
@@ -341,27 +419,28 @@ end
 
 -- What you supply, priced at the quality the plan uses.
 local function Supply(rec, slots)
-    local high = rec.plan and rec.plan.high
+    local materials = Materials(rec)
     rec.supply = {}
     local cost, priced = 0, false
     for _, entry in ipairs(slots) do
-        local count = entry.slot.quantityRequired or 1
-        local option = Pick(entry, high)
-        local itemID = option.reagent.itemID
-        local price = Pricing.Price(itemID)
-        rec.supply[#rec.supply + 1] = {
-            itemID = itemID,
-            icon = C_Item.GetItemIconByID(itemID),
-            count = count,
-            name = ItemName(itemID),
-            quality = option.quality,
-            each = price,
-            price = price and price * count,
-        }
-        if price then
-            cost, priced = cost + price * count, true
-        elseif Pricing.Available() then
-            rec.partial = true
+        for _, part in ipairs(Parts(entry, materials)) do
+            local count, option = part.count, part.option
+            local itemID = option.reagent.itemID
+            local price = Pricing.Price(itemID)
+            rec.supply[#rec.supply + 1] = {
+                itemID = itemID,
+                icon = C_Item.GetItemIconByID(itemID),
+                count = count,
+                name = ItemName(itemID),
+                quality = option.quality,
+                each = price,
+                price = price and price * count,
+            }
+            if price then
+                cost, priced = cost + price * count, true
+            elseif Pricing.Available() then
+                rec.partial = true
+            end
         end
     end
     if #rec.supply == 0 then
@@ -496,15 +575,14 @@ end
 -- The materials list to craft this order with its plan: only yours, the
 -- customer's are added by the game. Returns list, concentration.
 function Orders.CraftReagents(rec)
-    local high = rec.plan and rec.plan.high
-    return YourReagents(rec.slots or {}, high, true), rec.plan and rec.plan.conc or false
+    return YourReagents(rec.slots or {}, Materials(rec), true), rec.plan and rec.plan.conc or false
 end
 
 -- Does the plan still reach the quality right now? (Asked just before
 -- crafting, with the exact list that will be used.)
 function Orders.StillReaches(rec)
     if rec.need <= 1 then return true end
-    local info = Operation(rec.order, rec.slots or {}, rec.plan and rec.plan.high or false, rec.plan and rec.plan.conc or false)
+    local info = Operation(rec.order, rec.slots or {}, Materials(rec), rec.plan and rec.plan.conc or false)
     -- Still no answer, either way: don't block the craft on that.
     -- The card already said "Not sure", and the game checks the craft itself.
     if not info then
