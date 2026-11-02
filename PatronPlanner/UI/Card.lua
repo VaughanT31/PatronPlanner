@@ -416,7 +416,9 @@ function Card:ShowTooltip()
     for _, item in ipairs(rec.supply) do
         local name = TipIcon(item.icon) .. (item.name or "...") .. " x" .. item.count
             .. (item.quality and item.quality > 0 and (" " .. Util.QualityIcon(item.quality, 12)) or "")
-        if item.have and item.have > 0 then
+        if item.held and item.held > 0 then
+            name = name .. " " .. Util.Paint(item.have >= item.count and "green" or "amber", L.TIP_HAVE_HELD:format(item.have, item.held))
+        elseif item.have and item.have > 0 then
             name = name .. " " .. Util.Paint(item.have >= item.count and "green" or "amber", L.TIP_HAVE:format(item.have))
         end
         GameTooltip:AddDoubleLine(name, item.price and Util.Money(item.price, full) or Util.Paint("grey", L.TIP_NO_PRICE),

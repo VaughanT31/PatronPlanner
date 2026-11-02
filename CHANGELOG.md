@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.5
+
+- **Fixed: the same materials paid for several orders.** Every card counted everything you own as its own, so two orders could both say *All owned* with only enough for one. Queued orders now take their materials first, in queue order, and every other card shows what's left, with its cost, *to buy* amount and the **Nothing to buy** filter to match. The tooltip says how many are kept for your queue, and **Queue all** counts them as it goes.
+
 ## 0.5.4
 
 - **Fixed: orders with a Spark said Can't reach.** Before crafting, Patron Planner asks the game which quality the craft reaches. The customer's Spark was sent along with that question, and the game then gave no answer, which the queue took as Can't reach. Only materials that come in qualities are sent now, and if the game still doesn't answer, the craft is no longer blocked. The cards ask the same way, so Spark orders show their real quality reach instead of Not sure.

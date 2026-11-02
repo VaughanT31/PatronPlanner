@@ -12,8 +12,10 @@
 --     rewardValue   gold + priced reward items (after the AH cut) + rewards
 --                   the player gave a value (Values panel)
 --     bonus         true when a reward is soulbound or a currency
---     supply        { { itemID, icon, count, name, price, have, owned,
---                       quality, slot }, ... } you provide
+--     supply        { { itemID, icon, count, name, each, price, have, held,
+--                       owned, quality, slot }, ... } you provide; have is
+--                       what's free for this order, held what the queue
+--                       has taken (Orders.ShareStock)
 --     cost          what the supply is worth, nil when nothing is priced
 --     buyCost       what the part you don't own costs
 --     fromStock     true when you own everything you'd supply
@@ -341,39 +343,79 @@ end
 local function Supply(rec, slots)
     local high = rec.plan and rec.plan.high
     rec.supply = {}
-    local cost, buyCost, priced = 0, 0, false
-    local allOwned = true
+    local cost, priced = 0, false
     for _, entry in ipairs(slots) do
         local count = entry.slot.quantityRequired or 1
         local option = Pick(entry, high)
         local itemID = option.reagent.itemID
         local price = Pricing.Price(itemID)
-        local have = Owned(itemID)
-        local owned = math.min(have, count)
-        if owned < count then allOwned = false end
         rec.supply[#rec.supply + 1] = {
-            have = have,
-            owned = owned,
             itemID = itemID,
             icon = C_Item.GetItemIconByID(itemID),
             count = count,
             name = ItemName(itemID),
             quality = option.quality,
+            each = price,
             price = price and price * count,
         }
         if price then
             cost, priced = cost + price * count, true
-            buyCost = buyCost + price * (count - owned)
         elseif Pricing.Available() then
             rec.partial = true
         end
     end
-    rec.fromStock = #rec.supply > 0 and allOwned
     if #rec.supply == 0 then
-        rec.cost, rec.buyCost = 0, 0
+        rec.cost = 0
     elseif priced then
-        rec.cost, rec.buyCost = cost, buyCost
+        rec.cost = cost
     end
+end
+
+-- What the supply leaves to buy, given how much of each item is free for
+-- this order. stockOf(itemID) says how much that is.
+local function UseStock(rec, stockOf)
+    local buyCost, allOwned = 0, true
+    for _, item in ipairs(rec.supply) do
+        local total = Owned(item.itemID)
+        local have = math.max(0, math.min(stockOf(item.itemID), total))
+        item.have = have
+        item.held = total - have
+        item.owned = math.min(have, item.count)
+        if item.owned < item.count then allOwned = false end
+        if item.each then buyCost = buyCost + item.each * (item.count - item.owned) end
+    end
+    rec.fromStock = #rec.supply > 0 and allOwned
+    if rec.cost then rec.buyCost = buyCost end
+end
+
+-- Profit and what follows from it.
+local function UseMoney(rec)
+    rec.profit, rec.perConc, rec.concWorth = nil, nil, nil
+    -- Materials you own count at their market value (you could sell them
+    -- instead), unless the player chose to count them as free.
+    local ownedFree = ns.db and ns.db.settings.ownedFree
+    if Pricing.Available() then
+        local spend = ownedFree and rec.buyCost or rec.cost
+        if spend then rec.profit = rec.rewardValue - spend end
+    elseif #rec.supply == 0 then
+        -- No price addon, but nothing to buy: the gold (and any reward the
+        -- player gave a value) is the profit.
+        rec.profit = rec.rewardValue
+        rec.partial = #rec.rewards > 0 and not rec.bonus
+    end
+    local conc = rec.concAvg or rec.concCost
+    if rec.profit and conc and conc > 0 then
+        rec.perConc = rec.profit / conc
+        -- Concentration spent here can't be spent on another craft, so
+        -- when the player says what a point is worth, that comes off.
+        local each = Orders.ConcentrationValue()
+        if each then
+            rec.concWorth = each * conc
+            rec.profit = rec.profit - rec.concWorth
+        end
+    end
+    rec.reachable = rec.reach ~= "none" and rec.reach ~= "unlearned"
+    rec.nothingToBuy = rec.reachable and (#rec.supply == 0 or rec.fromStock)
 end
 
 local function Profession(recipeID)
@@ -414,33 +456,41 @@ function Orders.Evaluate(order, now)
     rec.reach = Reach(rec, order, slots)
     Rewards(rec, order)
     Supply(rec, slots)
+    UseStock(rec, Owned)
+    UseMoney(rec)
+    return rec
+end
 
-    -- Materials you own count at their market value (you could sell them
-    -- instead), unless the player chose to count them as free.
-    local ownedFree = ns.db and ns.db.settings.ownedFree
-    if Pricing.Available() then
-        local spend = ownedFree and rec.buyCost or rec.cost
-        if spend then rec.profit = rec.rewardValue - spend end
-    elseif #rec.supply == 0 then
-        -- No price addon, but nothing to buy: the gold (and any reward the
-        -- player gave a value) is the profit.
-        rec.profit = rec.rewardValue
-        rec.partial = #rec.rewards > 0 and not rec.bonus
+-- Shares out what you own, so the same materials never pay for two orders:
+-- queued orders take theirs first, in queue order, and every other order
+-- sees what's left. Orders outside the queue don't take from each other,
+-- since any one of them could be the one you pick next.
+function Orders.ShareStock(records)
+    local byKey, left = {}, {}
+    local function Left(itemID)
+        if left[itemID] == nil then left[itemID] = Owned(itemID) end
+        return left[itemID]
     end
-    local conc = rec.concAvg or rec.concCost
-    if rec.profit and conc and conc > 0 then
-        rec.perConc = rec.profit / conc
-        -- Concentration spent here can't be spent on another craft, so
-        -- when the player says what a point is worth, that comes off.
-        local each = Orders.ConcentrationValue()
-        if each then
-            rec.concWorth = each * conc
-            rec.profit = rec.profit - rec.concWorth
+    for _, rec in ipairs(records or {}) do byKey[rec.key] = rec end
+
+    local queued = {}
+    for _, entry in ipairs(ns.Queue and ns.Queue.List() or {}) do
+        queued[entry.key] = true
+        local rec = byKey[entry.key] or (ns.Queue.recs and ns.Queue.recs[entry.key])
+        if rec and rec.supply then
+            UseStock(rec, Left)
+            UseMoney(rec)
+        end
+        for _, item in ipairs((rec and rec.supply) or entry.supply or {}) do
+            left[item.itemID] = math.max(0, Left(item.itemID) - (item.count or 1))
         end
     end
-    rec.reachable = rec.reach ~= "none" and rec.reach ~= "unlearned"
-    rec.nothingToBuy = rec.reachable and (#rec.supply == 0 or rec.fromStock)
-    return rec
+    for _, rec in ipairs(records or {}) do
+        if not queued[rec.key] then
+            UseStock(rec, Left)
+            UseMoney(rec)
+        end
+    end
 end
 
 -- The materials list to craft this order with its plan: only yours, the

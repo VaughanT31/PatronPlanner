@@ -85,6 +85,7 @@ ns.L = {
     TIP_CANT_PRICE = "None of the materials have a price yet.",
     TIP_TIME_LEFT = "Time left",
     TIP_HAVE = "(have %d)",
+    TIP_HAVE_HELD = "(have %d, %d more kept for your queue)",
     TIP_TO_BUY = "To buy",
     TIP_OWNED_VALUED = "What you own still counts at its market value in the profit, since you could sell it instead. You can change that in the options.",
     TIP_OWNED_FREE = "What you own counts as free in the profit (options).",

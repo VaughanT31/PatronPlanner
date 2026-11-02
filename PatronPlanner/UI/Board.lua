@@ -341,8 +341,8 @@ end
 -- Drawing ---------------------------------------------------------------
 
 -- The game empties its order list while it fetches a new one: after an
--- order is crafted, for example, and crafting (CraftSim most of all) fires
--- bursts of item and currency events in that gap. So only Blizzard's own
+-- order is crafted, for example, and crafting (other crafting addons most
+-- of all) fires bursts of item and currency events in that gap. So only Blizzard's own
 -- results (ShowGeneric, fresh = true) may empty the board; any other
 -- refresh that reads an empty list keeps the cards it had and looks again
 -- a moment later, and refreshes wait while a request is in flight.
@@ -431,6 +431,8 @@ function Board:Layout()
         C_Timer.After(0, function() Board:Layout() end)
         return
     end
+
+    Orders.ShareStock(records)
 
     -- Filter and sort: learned recipes first, unlearned under a divider.
     local filter = Find(FILTERS, Setting("filter"))

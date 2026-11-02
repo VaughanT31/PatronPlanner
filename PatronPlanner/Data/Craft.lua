@@ -8,8 +8,7 @@
 --
 -- The order of steps, the claimed-order checks (order IDs compared as
 -- text, recrafts through RecraftRecipeForOrder, the result attached to the
--- claimed order) follow CraftSim's work order queue.
--- Adapted from CraftSim by Florian Schneider (MIT), see
+-- claimed order) are adapted from CraftSim by Florian Schneider (MIT), see
 -- ThirdParty/LICENSE-CraftSim.txt.
 
 local _, ns = ...

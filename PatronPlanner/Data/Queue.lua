@@ -210,6 +210,7 @@ function Queue.AddAll(records)
                     Skip(L.QUEUE_WHY_CLAIMS)
                 else
                     Queue.Add(rec)
+                    Orders.ShareStock(records)
                     added = added + 1
                     if conc > 0 and concLeft then concLeft = concLeft - conc end
                     if rec.orderType == Enum.CraftingOrderType.Public then claims = claims - 1 end

@@ -7,6 +7,8 @@
 - Press **+** on a card, or right-click it, to queue it.
 - **Queue all** adds every profitable order on the board. Chat says why any were left out.
 
+Queued orders take the materials you own first, in queue order, so the same stack never pays for two orders. Every other card then shows what's left, and its tooltip says how many are kept for your queue.
+
 ### Work through the queue
 
 The queue sits beside the profession window with a button per order:
