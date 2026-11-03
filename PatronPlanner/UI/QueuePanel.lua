@@ -1,5 +1,6 @@
 -- Patron Planner - the order queue panel, docked to the right of the
--- profession window on the Crafting Orders page.
+-- profession window on the Crafting Orders page, above any other side panel
+-- (UI/SidePanels.lua).
 --
 --  +-- Order queue (2) ----------------- [x] -+
 --  | [ic] Thalassian Treatise on Tailoring    |
@@ -12,7 +13,8 @@
 --  +------------------------------------------+
 --
 -- Shown with the Crafting Orders page, and hidden by its close button
--- until the board's Queue chip turns it on again.
+-- until the board's Queue chip or its button beside the window's tabs turns
+-- it on again.
 
 local _, ns = ...
 local L, Util, Queue, Craft, Orders, Shopping = ns.L, ns.Util, ns.Queue, ns.Craft, ns.Orders, ns.Shopping
@@ -205,6 +207,18 @@ function QueuePanel:Build()
         page:HookScript("OnShow", function() QueuePanel:Refresh() end)
         page:HookScript("OnHide", function() QueuePanel:Refresh() end)
     end
+
+    -- Placed with the other side panels (UI/SidePanels.lua), always first.
+    ns.SidePanels:Register("patronplanner.queue", {
+        frame = frame, label = L.QUEUE_CHIP_TITLE, tip = L.QUEUE_CHIP_TIP, order = 10,
+        pages = { orders = true },
+        isOn = function() return not ns.db.settings.queueHidden end,
+        toggle = function()
+            ns.db.settings.queueHidden = not ns.db.settings.queueHidden
+            QueuePanel:Refresh()
+            if ns.Board and ns.Board.active then ns.Board:Layout() end
+        end,
+    })
 end
 
 -- Shown whenever the Crafting Orders page is, unless closed with its X

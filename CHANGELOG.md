@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+
+- **Side panels no longer overlap:** the order queue, Auction Coach's Cheapest materials and Alt Inventory's Other characters now stack beside the profession window instead of covering each other. The order queue is always on top, and a panel that doesn't fit starts a new column. The Crafting Results log moves out of their way.
+- **Buttons beside the window's tabs:** on the Crafting Orders page, a button for each side panel turns it on and off. A gold line means it's on.
+
 ## 0.6.0
 
 - **Orders on your characters:** the new **Alts** button on the board (or `/pp alts`) shows which of your characters has good patron orders waiting, the most profit first: each profession, how many orders it has, how many you can craft and the best three. The game only lists orders for the character at the crafting table, so each character saves theirs when you open the Patron tab, and the window says how long ago that was. Expired orders drop out by themselves.
