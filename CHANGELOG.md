@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+- **Fixed: text running into other text on order cards.** Long item names ran into the profit, and a long "You supply" cost could spill into the reward. Names and the line under them now stop short of the profit and are shortened with "..." when needed, and the supply cost sits on the "You supply" line, so it stays in its own column.
+
 ## 0.7.1
 
 - **Update checks in addon managers:** the addon now carries its CurseForge project ID, so addon managers that read it can match it to CurseForge and tell you when an update is out.

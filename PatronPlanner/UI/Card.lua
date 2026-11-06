@@ -131,14 +131,13 @@ function Card.Create(parent)
     card.ProfitLabel:SetPoint("TOPRIGHT", card.Profit, "BOTTOMRIGHT", 0, -3)
 
     card.Name = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    -- Width set by Card:Fit, so long names stop short of the profit.
     card.Name:SetPoint("TOPLEFT", card.Icon, "TOPRIGHT", 8, -2)
-    card.Name:SetPoint("RIGHT", card, "RIGHT", -120, 0)
     card.Name:SetJustifyH("LEFT")
     card.Name:SetWordWrap(false)
 
     card.Status = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     card.Status:SetPoint("TOPLEFT", card.Name, "BOTTOMLEFT", 0, -6)
-    card.Status:SetPoint("RIGHT", card, "RIGHT", -110, 0)
     card.Status:SetJustifyH("LEFT")
     card.Status:SetWordWrap(false)
 
@@ -151,7 +150,12 @@ function Card.Create(parent)
     card.SupplyRow:SetPoint("BOTTOMLEFT", PAD + 4, 9)
     card.SupplySlots = {}
     for i = 1, MAX_SUPPLY do card.SupplySlots[i] = IconSlot(card.SupplyRow) end
-    card.SupplyText = card.SupplyRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    -- The cost sits on the label's line, so a long amount after the icons
+    -- can't run into the reward column.
+    card.SupplyText = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    card.SupplyText:SetPoint("LEFT", card.SupplyLabel, "RIGHT", 6, 0)
+    card.SupplyText:SetJustifyH("LEFT")
+    card.SupplyText:SetWordWrap(false)
 
     card.RewardLabel = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     card.RewardLabel:SetText(L.CARD_REWARD)
@@ -189,6 +193,7 @@ function Card.Create(parent)
         self.RewardLabel:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", math.floor(width / 2) + 4, 36)
         self.RewardRow:ClearAllPoints()
         self.RewardRow:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", math.floor(width / 2) + 4, 9)
+        if self.Fit then self:Fit() end
     end)
 
     card:SetScript("OnEnter", function(self)
@@ -298,9 +303,7 @@ function Card:SetRecord(rec, isBest)
     end
 
     -- You supply.
-    local x = FillSlots(self.SupplySlots, rec.supply, self.SupplyRow, 0)
-    self.SupplyText:ClearAllPoints()
-    self.SupplyText:SetPoint("LEFT", self.SupplyRow, "LEFT", x + 2, 0)
+    FillSlots(self.SupplySlots, rec.supply, self.SupplyRow, 0)
     if #rec.supply == 0 then
         self.SupplyText:SetText(Util.Paint("green", L.CARD_ALL_PROVIDED))
     elseif rec.fromStock then
@@ -322,6 +325,21 @@ function Card:SetRecord(rec, isBest)
     FillSlots(self.RewardSlots, rec.rewards, self.RewardRow, goldWidth)
 
     self:SetAlpha(rec.learned and 1 or 0.6)
+    self:Fit()
+end
+
+-- Text widths that keep each line clear of its neighbour: the name and the
+-- status line stop short of the profit and its label, and the supply cost
+-- stays in the left half, away from the reward.
+function Card:Fit()
+    local width = self:GetWidth()
+    if not width or width <= 0 then return end
+    local left = PAD + ICON + 8
+    local gap = 10
+    self.Name:SetWidth(math.max(40, width - left - PAD - self.Profit:GetStringWidth() - gap))
+    self.Status:SetWidth(math.max(40, width - left - PAD - self.ProfitLabel:GetStringWidth() - gap))
+    local column = math.floor(width / 2) - (PAD + 4) - self.SupplyLabel:GetStringWidth() - 6 - gap
+    self.SupplyText:SetWidth(math.max(30, column))
 end
 
 local function TipIcon(icon)
