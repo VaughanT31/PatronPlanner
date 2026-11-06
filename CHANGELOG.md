@@ -2,7 +2,7 @@
 
 ## 0.7.2
 
-- **Fixed: text running into other text on order cards.** Long item names ran into the profit, and a long "You supply" cost could spill into the reward. Names and the line under them now stop short of the profit and are shortened with "..." when needed, and the supply cost sits on the "You supply" line, so it stays in its own column.
+- **Fixed: text running into other text on order cards.** Long item names ran into the profit, and a long "You supply" cost could spill into the reward. Names and the line under them now stop short of the profit and are shortened with "..." when needed, and the supply cost sits on the "You supply" line, so it stays in its own column. The "+1" for materials beyond the icons now follows the icons.
 
 ## 0.7.1
 

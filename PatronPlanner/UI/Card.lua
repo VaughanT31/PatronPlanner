@@ -156,6 +156,8 @@ function Card.Create(parent)
     card.SupplyText:SetPoint("LEFT", card.SupplyLabel, "RIGHT", 6, 0)
     card.SupplyText:SetJustifyH("LEFT")
     card.SupplyText:SetWordWrap(false)
+    -- "+2" after the icons when there are more materials than icons.
+    card.SupplyMore = card.SupplyRow:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 
     card.RewardLabel = card:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     card.RewardLabel:SetText(L.CARD_REWARD)
@@ -303,17 +305,19 @@ function Card:SetRecord(rec, isBest)
     end
 
     -- You supply.
-    FillSlots(self.SupplySlots, rec.supply, self.SupplyRow, 0)
+    local x = FillSlots(self.SupplySlots, rec.supply, self.SupplyRow, 0)
+    self.SupplyMore:ClearAllPoints()
+    self.SupplyMore:SetPoint("LEFT", self.SupplyRow, "LEFT", x + 2, 0)
+    self.SupplyMore:SetText(#rec.supply > MAX_SUPPLY and ("+" .. (#rec.supply - MAX_SUPPLY)) or "")
     if #rec.supply == 0 then
         self.SupplyText:SetText(Util.Paint("green", L.CARD_ALL_PROVIDED))
     elseif rec.fromStock then
         self.SupplyText:SetText(Util.Paint("green", L.CARD_ALL_OWNED))
     elseif rec.cost then
-        local more = #rec.supply > MAX_SUPPLY and ("+" .. (#rec.supply - MAX_SUPPLY) .. "  ") or ""
         if rec.buyCost and rec.buyCost < rec.cost then
-            self.SupplyText:SetText(more .. L.CARD_TO_BUY:format(Util.Money(rec.buyCost, full)))
+            self.SupplyText:SetText(L.CARD_TO_BUY:format(Util.Money(rec.buyCost, full)))
         else
-            self.SupplyText:SetText(more .. Util.Money(rec.cost, full))
+            self.SupplyText:SetText(Util.Money(rec.cost, full))
         end
     else
         self.SupplyText:SetText("")
