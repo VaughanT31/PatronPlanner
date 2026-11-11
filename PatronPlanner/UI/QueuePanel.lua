@@ -218,6 +218,7 @@ function QueuePanel:Build()
             QueuePanel:Refresh()
             if ns.Board and ns.Board.active then ns.Board:Layout() end
         end,
+        store = function() return ns.db end,
     })
 end
 
