@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0
 
 - **Side panels can be moved:** Shift-drag the order queue (or any side panel) by its title to move the whole column beside the profession window, and Shift-right-click to put it back. The spot is remembered. On WoW Forever the panels also start past the profession tabs on the window's right edge instead of covering them.
 
