@@ -18,7 +18,7 @@ Each filter shows how many orders it matches:
 
 ### Orders on your other characters
 
-The **Alts** button (or `/patronplanner alts`) shows which character has good patron orders waiting, the most profit first. The game only lists orders for the character at the crafting table, so each character saves theirs when you open their Patron tab, and the window says how long ago that was. Those numbers use the prices from then, and expired orders drop out.
+The **Alts** button (or `/patronplanner alts`) shows which character has good patron orders waiting, the most profit first. The game only lists orders for the character at the crafting table, so each character saves theirs when you open their Patron tab, and the window says how long ago that was. Those numbers use the prices from then, and expired orders drop out. Hover the minimap button to see the best three without opening anything, and how many good orders expire within a day.
 
 ### Sorting
 

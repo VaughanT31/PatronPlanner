@@ -6,7 +6,7 @@ A World of Warcraft addon (Midnight, retail) that shows which crafting orders ar
 
 Queue the orders you want and work through them from one panel: claim, craft with the planned materials, hand in. The shopping list shows what the queue still needs and can send it to Auction Coach or Auctionator.
 
-The Alts button shows which of your characters has good patron orders waiting, as of when each one last opened the Patron tab. When an order needs better materials, the cost and the craft use the cheapest mix of qualities that still reaches it.
+The Alts button shows which of your characters has good patron orders waiting, as of when each one last opened the Patron tab. Hover the minimap button to see the best three without opening anything, and how many good orders expire within a day. When an order needs better materials, the cost and the craft use the cheapest mix of qualities that still reaches it.
 
 The Knowledge window shows what each of your professions can still earn this week, knowledge items waiting in your bags, the one-time treasures with waypoints, your unspent points, and every character at a glance.
 

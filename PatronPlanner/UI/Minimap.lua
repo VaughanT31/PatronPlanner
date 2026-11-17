@@ -40,6 +40,31 @@ local function Tooltip(self)
     else
         GameTooltip:AddLine(L.MINIMAP_NO_QUEUE, 0.7, 0.7, 0.7)
     end
+    -- The best orders waiting on your characters (as each last saw them).
+    local alts, shown = ns.AltOrders and ns.AltOrders.List() or {}, 0
+    for _, row in ipairs(alts) do
+        if row.profit > 0 and shown < 3 then
+            if shown == 0 then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(L.MINIMAP_ALTS, 1, 0.82, 0)
+            end
+            shown = shown + 1
+            local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[row.class or ""]
+            local best = row.professions[1]
+            local craftable = 0
+            for _, prof in ipairs(row.professions) do craftable = craftable + prof.craftable end
+            GameTooltip:AddDoubleLine(
+                L.MINIMAP_ALT_ROW:format(row.key:match("^[^%-]+") or row.key, best and best.name or "?", craftable),
+                Util.Money(row.profit),
+                color and color.r or 1, color and color.g or 1, color and color.b or 1, 1, 1, 1)
+        end
+    end
+    local soon, soonProfit = 0, 0
+    if ns.AltOrders then soon, soonProfit = ns.AltOrders.ExpiringSoon() end
+    if soon > 0 then
+        GameTooltip:AddLine(L.MINIMAP_ALTS_SOON:format(soon, Util.Money(soonProfit)), 1, 0.6, 0.3, true)
+    end
+    if shown > 0 then GameTooltip:AddLine(L.MINIMAP_ALTS_MORE, 0.6, 0.6, 0.6) end
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L.MINIMAP_LEFT, 0.9, 0.9, 0.9)
     GameTooltip:AddLine(L.MINIMAP_RIGHT, 0.9, 0.9, 0.9)

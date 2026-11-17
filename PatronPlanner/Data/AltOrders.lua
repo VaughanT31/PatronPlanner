@@ -59,6 +59,25 @@ local function SortOrders(a, b)
     return (a.profit or -math.huge) > (b.profit or -math.huge)
 end
 
+-- Orders you could craft at a profit that expire within `within` seconds,
+-- on any character: count and profit.
+function AltOrders.ExpiringSoon(within)
+    within = within or 86400
+    local now = GetServerTime()
+    local count, profit = 0, 0
+    for _, character in pairs(ns.db and Store() or {}) do
+        for _, saved in pairs(character.professions or {}) do
+            for _, order in ipairs(saved.orders or {}) do
+                local left = (order.expires or 0) - now
+                if left > 0 and left <= within and order.craftable and (order.profit or 0) > 0 then
+                    count, profit = count + 1, profit + order.profit
+                end
+            end
+        end
+    end
+    return count, profit
+end
+
 -- Every character with orders still open, the most profit first:
 -- { { key, class, profit, professions = { { name, at, count, craftable,
 --     profit, orders }, ... } }, ... }. Profit adds up orders you could

@@ -210,6 +210,10 @@ ns.L = {
     -- Minimap button
     MINIMAP_QUEUE = "%d orders queued",
     MINIMAP_NO_QUEUE = "Nothing queued",
+    MINIMAP_ALTS = "Orders on your characters",
+    MINIMAP_ALT_ROW = "%s (%s): %d to craft",
+    MINIMAP_ALTS_SOON = "%d good orders expire within a day (%s)",
+    MINIMAP_ALTS_MORE = "/pp alts for the full list",
     MINIMAP_LEFT = "Left-click: options",
     MINIMAP_RIGHT = "Right-click: shopping list",
     MINIMAP_MIDDLE = "Middle-click: knowledge",

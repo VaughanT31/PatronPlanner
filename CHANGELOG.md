@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- **Alts' orders on the minimap button:** hover it to see the three characters with the most profitable patron orders waiting (which profession, how many you can craft, the profit), and how many good orders expire within a day across all your characters. `/pp alts` still has the full list.
+
 ## 0.8.0
 
 - **Side panels can be moved:** Shift-drag the order queue (or any side panel) by its title to move the whole column beside the profession window, and Shift-right-click to put it back. The spot is remembered. On WoW Forever the panels also start past the profession tabs on the window's right edge instead of covering them.
