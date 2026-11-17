@@ -19,7 +19,7 @@ The queue sits beside the profession window with a button per order:
 
 **Next** does the next step for you, so a whole queue goes by one button.
 
-Show or hide the queue with the **Order queue** button beside the profession window's tabs, `/patronplanner queue` or the minimap button. It's always the top panel beside the window: Auction Coach's Cheapest materials and Alt Inventory's Other characters stack under it, or in a column of their own when there's no room.
+Show or hide the queue with the **Order queue** button beside the profession window's tabs, `/patronplanner queue` or the minimap button. It's always the top panel beside the window: Auction Coach's Cheapest materials and Alt Inventory's Other characters stack under it, or in a column of their own when there's no room. Shift-drag a panel by its title to move the whole column, and Shift-right-click it to put it back; the spot is remembered. On WoW Forever the panels start past the profession tabs on the window's right edge.
 
 ---
 
